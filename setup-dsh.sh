@@ -71,12 +71,34 @@ cat << 'EOF' > "$HOME/.dsh/cordis.patch.yml"
             name: "DeepSeek V3"
           - id: deepseek/deepseek-r1
             name: "DeepSeek R1"
+          - id: anthropic/claude-3.7-sonnet
+            name: "Claude 3.7 Sonnet"
+          - id: anthropic/claude-3.7-sonnet:thinking
+            name: "Claude 3.7 Sonnet (Thinking)"
           - id: anthropic/claude-3.5-sonnet
             name: "Claude 3.5 Sonnet"
-          - id: google/gemini-2.5-flash
-            name: "Gemini 2.5 Flash"
+          - id: anthropic/claude-3.5-haiku
+            name: "Claude 3.5 Haiku"
           - id: openai/gpt-4o
             name: "GPT-4o"
+          - id: openai/gpt-4o-mini
+            name: "GPT-4o mini"
+          - id: openai/o1
+            name: "OpenAI o1"
+          - id: openai/o3-mini
+            name: "OpenAI o3-mini"
+          - id: google/gemini-2.0-flash-001
+            name: "Gemini 2.0 Flash"
+          - id: google/gemini-2.5-flash
+            name: "Gemini 2.5 Flash"
+          - id: qwen/qwen-2.5-coder-32b-instruct
+            name: "Qwen 2.5 Coder 32B"
+          - id: qwen/qwen-2.5-72b-instruct
+            name: "Qwen 2.5 72B"
+          - id: meta-llama/llama-3.3-70b-instruct
+            name: "Llama 3.3 70B"
+          - id: mistralai/mistral-large-2411
+            name: "Mistral Large"
 
 # Route default model to OpenRouter DeepSeek V3
 - id: agent-default-model
