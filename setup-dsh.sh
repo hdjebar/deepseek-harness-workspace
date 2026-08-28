@@ -122,7 +122,71 @@ OPENROUTER_API_KEY="${OR_KEY}"
 EOF
 chmod 600 "$HOME/.dsh/.env"
 
-# 10. Programmatically bind scripts using 100% Bun Execution
+# 10. Provision standalone OpenRouter dynamic model sync tool
+echo "📡 Provisioning OpenRouter dynamic model synchronization tool..."
+cat << 'EOF' > sync-models.js
+#!/usr/bin/env bun
+import fs from "node:fs";
+import path from "node:path";
+import os from "node:os";
+
+async function syncOpenRouterModels() {
+  console.log("🌐 Fetching live model catalog from OpenRouter API (https://openrouter.ai/api/v1/models)...");
+  try {
+    const res = await fetch("https://openrouter.ai/api/v1/models");
+    if (!res.ok) {
+      throw new Error(`OpenRouter API error: HTTP ${res.status} ${res.statusText}`);
+    }
+    const data = await res.json();
+    const rawModels = data.data || [];
+    console.log(`✅ Successfully fetched ${rawModels.length} models from OpenRouter!`);
+
+    const models = rawModels.map(m => ({
+      id: m.id,
+      name: m.name || m.id,
+      context_length: m.context_length,
+      max_output: m.top_provider?.max_completion_tokens || undefined,
+      modalities: m.architecture?.input_modalities || ["text"]
+    }));
+
+    const patchPath = path.join(os.homedir(), ".dsh", "cordis.patch.yml");
+    if (!fs.existsSync(patchPath)) {
+      console.error(`❌ ~/.dsh/cordis.patch.yml not found at ${patchPath}`);
+      return;
+    }
+
+    let patchContent = fs.readFileSync(patchPath, "utf8");
+    const modelsYaml = models.map(m => `          - id: ${m.id}\n            name: "${m.name.replace(/"/g, '\\"')}"`).join("\n");
+
+    const openrouterBlock = `      openrouter:
+        apiKeyEnv: OPENROUTER_API_KEY
+        displayName: "OpenRouter"
+        api: openai-completions
+        baseURL: "https://openrouter.ai/api/v1"
+        models:
+${modelsYaml}`;
+
+    const updatedContent = patchContent.replace(
+      /[ \t]*openrouter:[\s\S]*?(?=\n# Route default model|\n- id: agent-default-model)/,
+      openrouterBlock + "\n"
+    );
+
+    fs.writeFileSync(patchPath, updatedContent, "utf8");
+    console.log(`🎉 Successfully synced ${models.length} live OpenRouter models into ~/.dsh/cordis.patch.yml!`);
+  } catch (err) {
+    console.error("❌ Failed to sync models from OpenRouter:", err.message);
+  }
+}
+
+syncOpenRouterModels();
+EOF
+chmod +x sync-models.js
+
+# 11. Automatically execute live model sync on bootstrap
+echo "🔄 Automatically syncing 390+ live OpenRouter models into runtime..."
+bun run sync-models.js || true
+
+# 12. Programmatically bind scripts using 100% Bun Execution
 echo "📌 Writing runtime script bindings to your local package.json..."
 bun pm trust --all || true
 bun -e '
@@ -136,6 +200,6 @@ echo -e "\n🏆 CONSOLIDATED ENVIRONMENT COMPILED SUCCESSFULLY!"
 echo "--------------------------------------------------------"
 echo "➡️ To boot the VS-Code Web Workbench UI:       bun run web"
 echo "➡️ To boot the Keyboard-First Terminal TUI:     bun run cli"
-echo "➡️ To sync live OpenRouter models (LOV):        bun run sync-models"
+echo "➡️ To resync live OpenRouter models (LOV):      bun run sync-models"
 echo "➡️ To invoke the Headless background pipeline:  bun run headless \"Your task\""
 echo "--------------------------------------------------------"
