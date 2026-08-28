@@ -30,8 +30,18 @@ fi
 
 # 3b. Remote Gate: validate the key against OpenRouter before anything is written
 echo "🔑 Validating key against the OpenRouter API..."
-# shellcheck disable=SC2016  # the ${...} in single quotes is a JS template literal, not shell expansion
-KEY_STATUS="$(OR_KEY="${OR_KEY}" bun -e 'const r = await fetch("https://openrouter.ai/api/v1/auth/key", { headers: { Authorization: `Bearer ${process.env.OR_KEY}` } }); console.log(r.status)' || echo 000)"
+KEY_STATUS="$(OR_KEY="${OR_KEY}" bun -e '
+  try {
+    const r = await fetch("https://openrouter.ai/api/v1/auth/key", {
+      headers: { Authorization: `Bearer ${process.env.OR_KEY}` }
+    });
+    process.stdout.write(String(r.status));
+  } catch {
+    process.stdout.write("000");
+  }
+' 2>/dev/null)"
+KEY_STATUS="$(printf '%s' "${KEY_STATUS}" | tr -dc '0-9')"
+
 if [ "${KEY_STATUS}" != "200" ]; then
     echo "❌ OpenRouter rejected this key (HTTP ${KEY_STATUS})."
     echo "   Verify it at https://openrouter.ai/keys, then re-run ./setup-dsh.sh."
