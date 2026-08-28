@@ -47,14 +47,12 @@ async function syncOpenRouterModels() {
         models:
 ${modelsYaml}`;
 
-  const updatedContent = patchContent.replace(
-    /[ \t]*openrouter:[\s\S]*?(?=\n# Route default model|\n- id: agent-default-model)/,
-    openrouterBlock + "\n"
-  );
-
-  if (updatedContent === patchContent) {
-    throw new Error("Failed to anchor and replace openrouter models in cordis.patch.yml (missing anchor comment/id).");
+  const anchorRe = /[ \t]*openrouter:[\s\S]*?(?=\n# Route default model|\n- id: agent-default-model)/;
+  if (!anchorRe.test(patchContent)) {
+    throw new Error("Failed to locate the openrouter block anchor in cordis.patch.yml (missing '# Route default model' comment or agent-default-model entry).");
   }
+
+  const updatedContent = patchContent.replace(anchorRe, openrouterBlock + "\n");
 
   fs.writeFileSync(patchPath, updatedContent, "utf8");
   console.log(`🎉 Successfully synced ${models.length} live OpenRouter models into ~/.dsh/cordis.patch.yml!`);

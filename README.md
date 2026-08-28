@@ -21,7 +21,7 @@ An advanced, production-configured multi-interface AI engineering workspace buil
          ┌───────────────────────────────────────────────────┐
          │             CONSOLIDATED BACKEND CORES            │
          ├───────────────────────────────────────────────────┤
-         │ 🛡️ Strict Workspace Sandbox (restrict_to_cwd: true) │
+         │ 🛡️ Runtime File Sandbox (workspace-write mode)    │
          │ 🌐 Universal Gateway (OpenRouter v1 Endpoint)     │
          │ 🔄 Live Model Catalog Sync (sync-models.js)       │
          │ 🔍 Free Search Network (@liustack/modsearch)      │
@@ -118,4 +118,6 @@ After running the reset, execute `./setup-dsh.sh` to reinstall and rebuild from 
 
 ## Security & Sandboxing
 
-The `workspace.restrict_to_cwd: true` rule is enforced in `~/.dsh/cordis.patch.yml`. This restricts running AI agents to the repository directory boundary, preventing accidental traversal or inspection of sensitive files outside the workspace folder.
+Agent filesystem access is enforced by DSH's **runtime file sandbox**, not by the cordis patch layer: every file mutation is fenced by a per-session sandbox mode — `read-only`, `workspace-write` (mutations allowed only under the session's workspace root), or `danger-full-access` — and wider modes are gated behind the interactive approval policy. This bootstrap makes no patch-level changes to that policy; the previously documented `workspace.restrict_to_cwd` patch entry had no effect on the current runtime and has been removed.
+
+Credentials are protected at the OS level: `0600` user-only permissions on `~/.dsh/.credentials.yaml`, `~/.dsh/settings.yaml`, and `~/.dsh/.env`, inside the `0700` `~/.dsh` root.

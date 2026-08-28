@@ -19,7 +19,7 @@ echo ""
 
 # 2. Capture the OpenRouter key silently without outputting it to logs
 read -rsp "Enter your OpenRouter Master API Key (sk-or-...): " OR_KEY; echo ""
-OR_KEY="$(echo -e "${OR_KEY}" | tr -d '[:space:]')"
+OR_KEY="$(printf '%s' "${OR_KEY}" | tr -d '[:space:]')"
 
 # 3. Pre-flight Gate: Validate the captured key pattern
 if [[ -z "${OR_KEY}" || ! "${OR_KEY}" =~ ^sk-or- ]]; then
@@ -51,11 +51,6 @@ chmod 700 "$HOME/.dsh"
 # 7. Generate the Unified Zero-Plaintext Master Patch Orchestration Template (Top-level YAML Array)
 echo "✍️ Writing verified configuration patch layer to ~/.dsh/cordis.patch.yml..."
 cat << 'EOF' > "$HOME/.dsh/cordis.patch.yml"
-# Enforce strict repository boundary restriction
-- id: workspace
-  config:
-    restrict_to_cwd: true
-
 # Disable default official DeepSeek provider in favor of OpenRouter Gateway
 - id: llm-deepseek
   disabled: true
@@ -129,8 +124,9 @@ OPENROUTER_API_KEY="${OR_KEY}"
 EOF
 chmod 600 "$HOME/.dsh/.env"
 
-# 10. Provision standalone OpenRouter dynamic model sync tool if missing
-if [ ! -f "sync-models.js" ]; then
+# 10. Provision the sync tool on fresh setups, and upgrade pre-hardening copies
+# (older embedded versions failed silently when the patch anchor was missing)
+if [ ! -f "sync-models.js" ] || ! grep -q "openrouter block anchor" sync-models.js 2>/dev/null; then
     echo "📡 Provisioning OpenRouter dynamic model synchronization tool..."
     cat << 'EOF' > sync-models.js
 #!/usr/bin/env bun
@@ -182,14 +178,12 @@ async function syncOpenRouterModels() {
         models:
 ${modelsYaml}`;
 
-  const updatedContent = patchContent.replace(
-    /[ \t]*openrouter:[\s\S]*?(?=\n# Route default model|\n- id: agent-default-model)/,
-    openrouterBlock + "\n"
-  );
-
-  if (updatedContent === patchContent) {
-    throw new Error("Failed to anchor and replace openrouter models in cordis.patch.yml (missing anchor comment/id).");
+  const anchorRe = /[ \t]*openrouter:[\s\S]*?(?=\n# Route default model|\n- id: agent-default-model)/;
+  if (!anchorRe.test(patchContent)) {
+    throw new Error("Failed to locate the openrouter block anchor in cordis.patch.yml (missing '# Route default model' comment or agent-default-model entry).");
   }
+
+  const updatedContent = patchContent.replace(anchorRe, openrouterBlock + "\n");
 
   fs.writeFileSync(patchPath, updatedContent, "utf8");
   console.log(`🎉 Successfully synced ${models.length} live OpenRouter models into ~/.dsh/cordis.patch.yml!`);
@@ -203,11 +197,7 @@ EOF
     chmod +x sync-models.js
 fi
 
-# 11. Automatically execute live model sync on bootstrap
-echo "🔄 Automatically syncing live OpenRouter models into runtime..."
-bun run sync-models.js
-
-# 12. Programmatically bind scripts using 100% Bun Execution
+# 11. Programmatically bind scripts using 100% Bun Execution
 echo "📌 Writing runtime script bindings to your local package.json..."
 bun pm trust --all || true
 bun -e '
@@ -216,6 +206,11 @@ bun -e '
   p.scripts = { ...p.scripts, web: "dsh web", cli: "dsh-tui", headless: "dsh --profile headless", "sync-models": "bun run sync-models.js" };
   fs.writeFileSync("package.json", JSON.stringify(p, null, 2));
 '
+
+# 12. Automatically execute live model sync on bootstrap (runs last so a sync
+# failure — e.g. offline — cannot skip the script bindings above)
+echo "🔄 Automatically syncing live OpenRouter models into runtime..."
+bun run sync-models.js
 
 echo -e "\n🏆 CONSOLIDATED ENVIRONMENT COMPILED SUCCESSFULLY!"
 echo "--------------------------------------------------------"
