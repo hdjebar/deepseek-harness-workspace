@@ -74,6 +74,12 @@ chmod +x setup-dsh.sh
   ```
   *Launches the Vim-bound terminal matrix via `dsh-tui`.*
 
+* **Sync Live OpenRouter Models (LOV):**
+  ```bash
+  bun run sync-models
+  ```
+  *Queries OpenRouter's live API (`https://openrouter.ai/api/v1/models`) to dynamically sync all 390+ active models.*
+
 * **Run a Background Headless Agent Pipeline Task:**
   ```bash
   bun run headless "Analyze codebase and optimize build scripts"

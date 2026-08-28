@@ -128,7 +128,7 @@ bun pm trust --all || true
 bun -e '
   const fs = require("fs");
   const p = JSON.parse(fs.readFileSync("package.json", "utf8"));
-  p.scripts = { ...p.scripts, web: "dsh web", cli: "dsh-tui", headless: "dsh --profile headless" };
+  p.scripts = { ...p.scripts, web: "dsh web", cli: "dsh-tui", headless: "dsh --profile headless", "sync-models": "bun run sync-models.js" };
   fs.writeFileSync("package.json", JSON.stringify(p, null, 2));
 '
 
@@ -136,5 +136,6 @@ echo -e "\n🏆 CONSOLIDATED ENVIRONMENT COMPILED SUCCESSFULLY!"
 echo "--------------------------------------------------------"
 echo "➡️ To boot the VS-Code Web Workbench UI:       bun run web"
 echo "➡️ To boot the Keyboard-First Terminal TUI:     bun run cli"
+echo "➡️ To sync live OpenRouter models (LOV):        bun run sync-models"
 echo "➡️ To invoke the Headless background pipeline:  bun run headless \"Your task\""
 echo "--------------------------------------------------------"
