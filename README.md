@@ -18,23 +18,26 @@ An advanced, production-configured multi-interface AI engineering workspace buil
                  │                               │
                  └───────────────┬───────────────┘
                                  ▼
-         ┌───────────────────────────────────────────────┐
-         │             CONSOLIDATED BACKEND CORES        │
-         ├───────────────────────────────────────────────┤
-         │ 🔐 Hardware Vault (@deepseek-ai/dsh-credentials)│
-         │ 🌐 Universal Gateway (OpenRouter v1 Endpoint) │
-         │ 🔍 Free Search Network (@liustack/modsearch)  │
-         │ 🔌 Extensible MCP Terminal Hub (dsh-mcp-panel)│
-         │ 📁 VSCode-Style Sidebar (dsh-better-sidebar)  │
-         │ 🛒 Community Plugin Store (dshmarket & search)│
-         │ 🖥️  Tmux Context (@deepseek-ai/dsh-tmux-context)│
-         └───────────────────────────────────────────────┘
+          ┌───────────────────────────────────────────────────┐
+          │             CONSOLIDATED BACKEND CORES            │
+          ├───────────────────────────────────────────────────┤
+          │ 🔐 Hardware Vault (@deepseek-ai/dsh-credentials)    │
+          │ 🌐 Universal Gateway (OpenRouter v1 Endpoint)     │
+          │ 🔄 Live Model Catalog Sync (sync-models.js)       │
+          │ 🔍 Free Search Network (@liustack/modsearch)      │
+          │ 🔌 Extensible MCP Terminal Hub (dsh-mcp-panel)    │
+          │ 📁 VSCode-Style Sidebar (dsh-better-sidebar)      │
+          │ ⚙️ Advanced Model Configurator (Model Pro)        │
+          │ 🛒 Community Plugin Store (dshmarket & search)    │
+          │ 🖥️  Tmux Context (@deepseek-ai/dsh-tmux-context)    │
+          └───────────────────────────────────────────────────┘
 ```
 
 ## Core Infrastructure Features
 
 * **Zero Plaintext Security Matrix:** API credentials are never written to disk unencrypted. Tokens are stored natively inside your operating system hardware vault (Keychain/DPAPI via `@deepseek-ai/dsh-credentials`), with cleartext artifacts purged on setup.
-* **Unified Model Gateway:** Seamlessly routes completions to OpenRouter (`https://openrouter.ai/api/v1`) with deterministic temperature fencing (`0.2`).
+* **Unified OpenRouter Gateway:** Routes completions directly to OpenRouter (`https://openrouter.ai/api/v1`) with full support for streaming, function calling, and multimodal inputs.
+* **Live Dynamic Model Sync (`sync-models.js`):** Automatically fetches and registers 390+ real-time models from OpenRouter's live API (`https://openrouter.ai/api/v1/models`).
 * **Free No-Key Web Search & Extraction:** Replaces paid search defaults with `@liustack/modsearch`. Provides zero-configuration web search, Firecrawl scraping, and multi-engine fallback.
 * **Dual Interface Environments:**
   * **VS Code Web Layout (`dsh-better-sidebar`):** Full browser IDE experience with multi-tab editor, tree explorer, live terminal, and git diff viewer.
