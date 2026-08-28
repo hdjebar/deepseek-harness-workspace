@@ -78,6 +78,20 @@ chmod +x setup-dsh.sh
   bun run headless "Analyze codebase and optimize build scripts"
   ```
 
+## Reset & Clean Slate
+
+To wipe the global DSH environment, credentials, and local workspace artifacts to start completely fresh:
+
+```bash
+# 1. Remove global DSH home directory (profiles, credentials, patch layers)
+rm -rf "$HOME/.dsh"
+
+# 2. Clean local workspace artifacts, dependencies, and lockfiles
+rm -rf node_modules package.json bun.lock bun.lockb .dsh
+```
+
+After running the reset, execute `./setup-dsh.sh` to reinstall and rebuild from scratch.
+
 ## Security & Sandboxing
 
 The `workspace.restrict_to_cwd: true` rule is enforced in `~/.dsh/cordis.patch.yml`. This restricts running AI agents to the repository directory boundary, preventing accidental traversal or inspection of sensitive files outside the workspace folder.
