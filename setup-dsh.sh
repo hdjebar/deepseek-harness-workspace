@@ -36,124 +36,71 @@ if [ ! -f "package.json" ]; then
     bun init -y > /dev/null
 fi
 
-echo "⚡ Pulling DeepSeek Harness framework engine down via Bun..."
-bun add @deepseek-ai/dsh
+echo "⚡ Pulling DeepSeek Harness framework engine & TUI via Bun..."
+bun add @deepseek-ai/dsh dsh-tui
 
 # 6. Build global user home configuration directory tree and tighten access rights
 echo "🛡️ Establishing strict OS-level folder boundary permissions..."
 mkdir -p "$HOME/.dsh"
 chmod 700 "$HOME/.dsh"
 
-# 7. Generate the Unified Zero-Plaintext Master Patch Orchestration Template
+# 7. Generate the Unified Zero-Plaintext Master Patch Orchestration Template (Top-level YAML Array)
 echo "✍️ Writing verified configuration patch layer to ~/.dsh/cordis.patch.yml..."
 cat << 'EOF' > "$HOME/.dsh/cordis.patch.yml"
-version: 1
+# Disable default paid DeepSeek search in favor of free ModSearch
+- id: web-search-deepseek
+  disabled: true
 
-# --- Unified UI Preferences ---
-app:
-  telemetry: false         # Blocks analytical tracking hooks entirely
-  theme: dark              # Shuts down light-mode layers globally
-  language: en-US
+- id: web
+  config:
+    searchProvider: modsearch
 
-# --- Security Fencing Core Rules ---
-workspace:
-  auto_mount: true         # Force-targets and reads current working dir on launch
-  restrict_to_cwd: true    # Security Box: blocks agent from reading home dir files/keys
+# Route default model to OpenRouter
+- id: agent-default-model
+  config:
+    provider: openrouter
+    model: deepseek/deepseek-chat
 
-# --- Model Routing Layout Defaults ---
-agent:
-  default_provider: openrouter-completions
-  temperature: 0.2         # Enforces strict deterministic syntax generation bounds
+# Configure MCP Management Console Cockpit
+- id: mcp-panel
+  config:
+    auto_discover_local: true
+    enable_trial_console: true
+    backup_generations: true
 
-# --- Dynamic Plugin Component Registries ---
-plugins:
-  # Built-in Hardware Locker Hook
-  - id: "@deepseek-ai/dsh-credentials"
-    enabled: true
-    config:
-      vault_provider: system-native
-      fallback_to_env: true
-
-  # Native Tmux Environmental State & Context Observer
-  - id: "@deepseek-ai/dsh-tmux-context"
-    enabled: true
-
-  # MCP MANAGEMENT CONSOLE COCKPIT
-  - id: dsh-mcp-panel
-    enabled: true
-    config:
-      auto_discover_local: true    # Automatically monitors local workspace mcp configs
-      enable_trial_console: true   # Renders a sandboxed playground to run individual MCP tools
-      backup_generations: true     # Builds version-tracked logs of your MCP schema updates
-
-  # VS Code Integrated Browser Layout Panel Grid
-  - id: dsh-better-sidebar
-    enabled: true
-    config:
-      layout: "vscode-classic"
-      persistent_terminal: true
-      enable_git_diff: true
-
-  # Keyboard-First Terminal Matrix CLI Viewport
-  - id: dsh-tui
-    enabled: true
-    config:
-      editor_binding: "vim"
-      split_direction: "vertical"
-      syntax_highlighting: true
-      mouse_support: true
-
-  # Graphical Storefront Explorer
-  - id: dshmarket
-    enabled: true
-    config:
-      catalog_mirror: "https://dshmarket.com"
-      auto_check_updates: true
-
-  # Natural Language AI Extension Query Engine
-  - id: dsh-find-plugin
-    enabled: true
-    config:
-      search_scope: "github-topic"
-      cache_ttl_ms: 300000
-
-  # Hard shutdown on the paid native DeepSeek Search plugin tracking row
-  - id: "@deepseek-ai/dsh-web-search-deepseek"
-    enabled: false
-
-  # Inject Verified Free No-API-Key Web Search & Extraction Scraper Bridge
-  - id: "@liustack/modsearch"
-    enabled: true
-    config:
-      engine: "auto"
-      max_results: 5
-      crawl_depth_level: 1
-
-# --- Endpoint Routing Configurations ---
-providers:
-  openrouter-completions:
-    base_url: "https://openrouter.ai/api/v1"
-    api_key_ref: "vault://system-native/openrouter/api_key"
+# Configure VS Code Integrated Browser Layout Panel Grid
+- id: better-sidebar
+  config:
+    layout: vscode-classic
+    persistent_terminal: true
+    enable_git_diff: true
 EOF
 
 # 8. Explicitly resolve and link verified public ecosystem modules into the runtime profile
 echo "🔐 Deploying and linking external multi-profile plugin segments..."
-bunx dsh plugin --profile web add dshmarket dsh-mcp-panel dsh-better-sidebar dsh-tui dsh-find-plugin @liustack/modsearch
+bunx @deepseek-ai/dsh plugin --profile web add dshmarket dsh-mcp-panel dsh-better-sidebar dsh-find-plugin @liustack/modsearch
 
-# 9. Encrypt and pass your model credential safely into the macOS/Linux Hardware Keychain
-echo "🗝️ Injecting tokens directly into secure operating system hardware vault..."
-bunx dsh credentials set openrouter api_key "$OR_KEY"
+# 9. Store OpenRouter API credentials in ~/.dsh/.credentials.yaml and ~/.dsh/.env with strict 0600 permissions
+echo "🗝️ Injecting tokens securely into ~/.dsh/.credentials.yaml and ~/.dsh/.env (mode 0600)..."
+cat << EOF > "$HOME/.dsh/.credentials.yaml"
+version: 1
+refs:
+  OPENROUTER_API_KEY: "${OR_KEY}"
+EOF
+chmod 600 "$HOME/.dsh/.credentials.yaml"
 
-# 10. Erase cleartext leftover files to eliminate plaintext leaks completely
-rm -f "$HOME/.dsh/.credentials.yaml"
+cat << EOF > "$HOME/.dsh/.env"
+OPENROUTER_API_KEY="${OR_KEY}"
+EOF
+chmod 600 "$HOME/.dsh/.env"
 
-# 11. Programmatically bind scripts using 100% Bun Execution
+# 10. Programmatically bind scripts using 100% Bun Execution
 echo "📌 Writing runtime script bindings to your local package.json..."
 bun pm trust --all || true
 bun -e '
   const fs = require("fs");
   const p = JSON.parse(fs.readFileSync("package.json", "utf8"));
-  p.scripts = { ...p.scripts, web: "dsh web", cli: "dsh tui", headless: "dsh --profile headless" };
+  p.scripts = { ...p.scripts, web: "dsh web", cli: "dsh-tui", headless: "dsh --profile headless" };
   fs.writeFileSync("package.json", JSON.stringify(p, null, 2));
 '
 
@@ -161,5 +108,5 @@ echo -e "\n🏆 CONSOLIDATED ENVIRONMENT COMPILED SUCCESSFULLY!"
 echo "--------------------------------------------------------"
 echo "➡️ To boot the VS-Code Web Workbench UI:       bun run web"
 echo "➡️ To boot the Keyboard-First Terminal TUI:     bun run cli"
-echo "➡️ To invoke the Headless background pipeline:  bun run headless \"Your command\""
+echo "➡️ To invoke the Headless background pipeline:  bun run headless \"Your task\""
 echo "--------------------------------------------------------"
