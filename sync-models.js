@@ -5,33 +5,41 @@ import os from "node:os";
 
 async function syncOpenRouterModels() {
   console.log("🌐 Fetching live model catalog from OpenRouter API (https://openrouter.ai/api/v1/models)...");
-  try {
-    const res = await fetch("https://openrouter.ai/api/v1/models");
-    if (!res.ok) {
-      throw new Error(`OpenRouter API error: HTTP ${res.status} ${res.statusText}`);
-    }
-    const data = await res.json();
-    const rawModels = data.data || [];
-    console.log(`✅ Successfully fetched ${rawModels.length} models from OpenRouter!`);
+  
+  const res = await fetch("https://openrouter.ai/api/v1/models");
+  if (!res.ok) {
+    throw new Error(`OpenRouter API responded with HTTP ${res.status} (${res.statusText})`);
+  }
+  
+  const data = await res.json();
+  const rawModels = data.data || [];
+  if (rawModels.length === 0) {
+    throw new Error("OpenRouter API returned an empty model list.");
+  }
+  
+  console.log(`✅ Successfully fetched ${rawModels.length} models from OpenRouter!`);
 
-    const models = rawModels.map(m => ({
-      id: m.id,
-      name: m.name || m.id,
-      context_length: m.context_length,
-      max_output: m.top_provider?.max_completion_tokens || undefined,
-      modalities: m.architecture?.input_modalities || ["text"]
-    }));
+  const models = rawModels.map(m => ({
+    id: m.id,
+    name: m.name || m.id
+  }));
 
-    const patchPath = path.join(os.homedir(), ".dsh", "cordis.patch.yml");
-    if (!fs.existsSync(patchPath)) {
-      console.error(`❌ ~/.dsh/cordis.patch.yml not found at ${patchPath}`);
-      return;
-    }
+  const patchPath = path.join(os.homedir(), ".dsh", "cordis.patch.yml");
+  if (!fs.existsSync(patchPath)) {
+    throw new Error(`~/.dsh/cordis.patch.yml not found at ${patchPath}`);
+  }
 
-    let patchContent = fs.readFileSync(patchPath, "utf8");
-    const modelsYaml = models.map(m => `          - id: ${m.id}\n            name: "${m.name.replace(/"/g, '\\"')}"`).join("\n");
+  const patchContent = fs.readFileSync(patchPath, "utf8");
+  if (!patchContent.includes("openrouter:")) {
+    throw new Error("Target 'openrouter:' provider section not found in cordis.patch.yml");
+  }
 
-    const openrouterBlock = `      openrouter:
+  const modelsYaml = models.map(m => {
+    const safeName = m.name.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    return `          - id: "${m.id}"\n            name: "${safeName}"`;
+  }).join("\n");
+
+  const openrouterBlock = `      openrouter:
         apiKeyEnv: OPENROUTER_API_KEY
         displayName: "OpenRouter"
         api: openai-completions
@@ -39,16 +47,20 @@ async function syncOpenRouterModels() {
         models:
 ${modelsYaml}`;
 
-    const updatedContent = patchContent.replace(
-      /[ \t]*openrouter:[\s\S]*?(?=\n# Route default model|\n- id: agent-default-model)/,
-      openrouterBlock + "\n"
-    );
+  const updatedContent = patchContent.replace(
+    /[ \t]*openrouter:[\s\S]*?(?=\n# Route default model|\n- id: agent-default-model)/,
+    openrouterBlock + "\n"
+  );
 
-    fs.writeFileSync(patchPath, updatedContent, "utf8");
-    console.log(`🎉 Successfully synced ${models.length} live OpenRouter models into ~/.dsh/cordis.patch.yml!`);
-  } catch (err) {
-    console.error("❌ Failed to sync models from OpenRouter:", err.message);
+  if (updatedContent === patchContent) {
+    throw new Error("Failed to anchor and replace openrouter models in cordis.patch.yml (missing anchor comment/id).");
   }
+
+  fs.writeFileSync(patchPath, updatedContent, "utf8");
+  console.log(`🎉 Successfully synced ${models.length} live OpenRouter models into ~/.dsh/cordis.patch.yml!`);
 }
 
-syncOpenRouterModels();
+syncOpenRouterModels().catch(err => {
+  console.error("❌ Model sync failed:", err.message);
+  process.exit(1);
+});

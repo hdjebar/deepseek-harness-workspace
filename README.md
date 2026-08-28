@@ -18,26 +18,25 @@ An advanced, production-configured multi-interface AI engineering workspace buil
                  │                               │
                  └───────────────┬───────────────┘
                                  ▼
-          ┌───────────────────────────────────────────────────┐
-          │             CONSOLIDATED BACKEND CORES            │
-          ├───────────────────────────────────────────────────┤
-          │ 🔐 Hardware Vault (@deepseek-ai/dsh-credentials)    │
-          │ 🌐 Universal Gateway (OpenRouter v1 Endpoint)     │
-          │ 🔄 Live Model Catalog Sync (sync-models.js)       │
-          │ 🔍 Free Search Network (@liustack/modsearch)      │
-          │ 🔌 Extensible MCP Terminal Hub (dsh-mcp-panel)    │
-          │ 📁 VSCode-Style Sidebar (dsh-better-sidebar)      │
-          │ ⚙️ Advanced Model Configurator (Model Pro)        │
-          │ 🛒 Community Plugin Store (dshmarket & search)    │
-          │ 🖥️  Tmux Context (@deepseek-ai/dsh-tmux-context)    │
-          └───────────────────────────────────────────────────┘
+         ┌───────────────────────────────────────────────────┐
+         │             CONSOLIDATED BACKEND CORES            │
+         ├───────────────────────────────────────────────────┤
+         │ 🛡️ Strict Workspace Sandbox (restrict_to_cwd: true) │
+         │ 🌐 Universal Gateway (OpenRouter v1 Endpoint)     │
+         │ 🔄 Live Model Catalog Sync (sync-models.js)       │
+         │ 🔍 Free Search Network (@liustack/modsearch)      │
+         │ 🔌 Extensible MCP Terminal Hub (dsh-mcp-panel)    │
+         │ 📁 VSCode-Style Sidebar (dsh-better-sidebar)      │
+         │ ⚙️ Advanced Model Configurator (Model Pro)        │
+         │ 🛒 Community Plugin Store (dshmarket & search)    │
+         └───────────────────────────────────────────────────┘
 ```
 
 ## Core Infrastructure Features
 
-* **Zero Plaintext Security Matrix:** API credentials are never written to disk unencrypted. Tokens are stored natively inside your operating system hardware vault (Keychain/DPAPI via `@deepseek-ai/dsh-credentials`), with cleartext artifacts purged on setup.
+* **Strict POSIX Permission Isolation:** API credentials are protected with strict `0600` user-only permissions (`~/.dsh/.credentials.yaml` and `~/.dsh/.env`) inside the `0700` user home configuration root.
 * **Unified OpenRouter Gateway:** Routes completions directly to OpenRouter (`https://openrouter.ai/api/v1`) with full support for streaming, function calling, and multimodal inputs.
-* **Live Dynamic Model Sync (`sync-models.js`):** Automatically fetches and registers 390+ real-time models from OpenRouter's live API (`https://openrouter.ai/api/v1/models`).
+* **Live Dynamic Model Sync (`sync-models.js`):** Automatically queries OpenRouter's live API (`https://openrouter.ai/api/v1/models`) to fetch and register all real-time models into your runtime patch.
 * **Free No-Key Web Search & Extraction:** Replaces paid search defaults with `@liustack/modsearch`. Provides zero-configuration web search, Firecrawl scraping, and multi-engine fallback.
 * **Dual Interface Environments:**
   * **VS Code Web Layout (`dsh-better-sidebar`):** Full browser IDE experience with multi-tab editor, tree explorer, live terminal, and git diff viewer.
@@ -45,7 +44,6 @@ An advanced, production-configured multi-interface AI engineering workspace buil
 * **Unified MCP Control Room (`dsh-mcp-panel`):** Auto-discovers local Model Context Protocol servers and provides a trial execution console with version-backed backups.
 * **Models Pro / Advanced Model Configurator (`dsh-provider-model-configurator`):** Dedicated UI in Settings (`Model Pro`) to create, edit, copy presets, and tune context windows, max tokens, modalities, and reasoning effort.
 * **Plugin Storefront & Discovery (`dshmarket` & `dsh-find-plugin`):** Integrated GUI store and natural-language GitHub topic discovery for community plugins.
-* **Tmux Context Integration (`@deepseek-ai/dsh-tmux-context`):** Observes active terminal states and session context to enrich LLM prompts.
 
 ## Quick Start Guide
 
@@ -81,23 +79,23 @@ chmod +x setup-dsh.sh
   ```bash
   bun run sync-models
   ```
-  *Queries OpenRouter's live API (`https://openrouter.ai/api/v1/models`) to dynamically sync all 390+ active models.*
+  *Queries OpenRouter's live API (`https://openrouter.ai/api/v1/models`) to dynamically sync all active models.*
 
 * **Run a Background Headless Agent Pipeline Task:**
   ```bash
   bun run headless "Analyze codebase and optimize build scripts"
   ```
 
-## Stopping & Killing Running Processes (xkill)
+## Stopping & Killing Running Processes
 
-If a background DSH process, web server, or port (`3080`) is locked or lingering, terminate them with:
+If a background DSH process, web server, or port (`3080`) is locked or lingering, terminate them safely:
 
 ```bash
 # 1. Kill any active DSH web server holding port 3080
 lsof -ti :3080 | xargs kill -9 2>/dev/null || true
 
-# 2. Force-kill all running DSH / Bun processes
-pkill -9 -f "dsh" || true
+# 2. Kill running DSH processes
+pkill -9 -f "bun.*dsh" 2>/dev/null || pkill -9 -f "dsh-tui" 2>/dev/null || true
 ```
 
 ## Reset & Clean Slate
@@ -106,8 +104,8 @@ To wipe the global DSH environment, credentials, and local workspace artifacts t
 
 ```bash
 # 1. Kill any active DSH background processes
-pkill -9 -f "dsh" || true
 lsof -ti :3080 | xargs kill -9 2>/dev/null || true
+pkill -9 -f "bun.*dsh" 2>/dev/null || pkill -9 -f "dsh-tui" 2>/dev/null || true
 
 # 2. Remove global DSH home directory (profiles, credentials, patch layers)
 rm -rf "$HOME/.dsh"
