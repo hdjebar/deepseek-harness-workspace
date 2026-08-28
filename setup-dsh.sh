@@ -36,6 +36,7 @@ fi
 # 5. Initialize project manifest context if missing and install core bundle
 if [ ! -f "package.json" ]; then
     bun init -y > /dev/null
+    rm -f CLAUDE.md index.ts tsconfig.json || true
 fi
 
 echo "⚡ Pulling DeepSeek Harness framework engine & TUI via Bun..."

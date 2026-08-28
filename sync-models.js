@@ -5,18 +5,15 @@ import os from "node:os";
 
 async function syncOpenRouterModels() {
   console.log("🌐 Fetching live model catalog from OpenRouter API (https://openrouter.ai/api/v1/models)...");
-  
   try {
     const res = await fetch("https://openrouter.ai/api/v1/models");
     if (!res.ok) {
       throw new Error(`OpenRouter API error: HTTP ${res.status} ${res.statusText}`);
     }
-    
     const data = await res.json();
     const rawModels = data.data || [];
     console.log(`✅ Successfully fetched ${rawModels.length} models from OpenRouter!`);
 
-    // Cleanly map model entries
     const models = rawModels.map(m => ({
       id: m.id,
       name: m.name || m.id,
@@ -31,10 +28,7 @@ async function syncOpenRouterModels() {
       return;
     }
 
-    // Read existing patch file
     let patchContent = fs.readFileSync(patchPath, "utf8");
-
-    // Format models YAML block
     const modelsYaml = models.map(m => `          - id: ${m.id}\n            name: "${m.name.replace(/"/g, '\\"')}"`).join("\n");
 
     const openrouterBlock = `      openrouter:
@@ -45,7 +39,6 @@ async function syncOpenRouterModels() {
         models:
 ${modelsYaml}`;
 
-    // Replace openrouter provider section
     const updatedContent = patchContent.replace(
       /[ \t]*openrouter:[\s\S]*?(?=\n# Route default model|\n- id: agent-default-model)/,
       openrouterBlock + "\n"
@@ -53,7 +46,6 @@ ${modelsYaml}`;
 
     fs.writeFileSync(patchPath, updatedContent, "utf8");
     console.log(`🎉 Successfully synced ${models.length} live OpenRouter models into ~/.dsh/cordis.patch.yml!`);
-    console.log("➡️ Restart your web server ('bun run web') and refresh your browser to view all models.");
   } catch (err) {
     console.error("❌ Failed to sync models from OpenRouter:", err.message);
   }
