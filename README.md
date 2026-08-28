@@ -65,7 +65,7 @@ chmod +x setup-dsh.sh
   ```bash
   bun run web
   ```
-  *Opens the browser UI with `dsh-better-sidebar` enabled.*
+  *Opens the browser UI at `http://127.0.0.1:3080` with `dsh-better-sidebar` enabled.*
 
 * **Launch the Keyboard-First Terminal Interface (TUI Matrix):**
   ```bash
@@ -78,15 +78,31 @@ chmod +x setup-dsh.sh
   bun run headless "Analyze codebase and optimize build scripts"
   ```
 
+## Stopping & Killing Running Processes (xkill)
+
+If a background DSH process, web server, or port (`3080`) is locked or lingering, terminate them with:
+
+```bash
+# 1. Kill any active DSH web server holding port 3080
+lsof -ti :3080 | xargs kill -9 2>/dev/null || true
+
+# 2. Force-kill all running DSH / Bun processes
+pkill -9 -f "dsh" || true
+```
+
 ## Reset & Clean Slate
 
 To wipe the global DSH environment, credentials, and local workspace artifacts to start completely fresh:
 
 ```bash
-# 1. Remove global DSH home directory (profiles, credentials, patch layers)
+# 1. Kill any active DSH background processes
+pkill -9 -f "dsh" || true
+lsof -ti :3080 | xargs kill -9 2>/dev/null || true
+
+# 2. Remove global DSH home directory (profiles, credentials, patch layers)
 rm -rf "$HOME/.dsh"
 
-# 2. Clean local workspace artifacts, dependencies, and lockfiles
+# 3. Clean local workspace artifacts, dependencies, and lockfiles
 rm -rf node_modules package.json bun.lock bun.lockb .dsh
 ```
 

@@ -103,14 +103,25 @@ EOF
 echo "🔐 Deploying and linking external multi-profile plugin segments..."
 bunx @deepseek-ai/dsh plugin --profile web add dshmarket dsh-mcp-panel dsh-better-sidebar dsh-find-plugin @liustack/modsearch
 
-# 9. Store OpenRouter API credentials in ~/.dsh/.credentials.yaml and ~/.dsh/.env with strict 0600 permissions
-echo "🗝️ Injecting tokens securely into ~/.dsh/.credentials.yaml and ~/.dsh/.env (mode 0600)..."
+# 9. Store OpenRouter API credentials and configure ~/.dsh/settings.yaml
+echo "🗝️ Injecting tokens securely into ~/.dsh/.credentials.yaml and configuring ~/.dsh/settings.yaml..."
 cat << EOF > "$HOME/.dsh/.credentials.yaml"
 version: 1
 refs:
   OPENROUTER_API_KEY: "${OR_KEY}"
 EOF
 chmod 600 "$HOME/.dsh/.credentials.yaml"
+
+cat << EOF > "$HOME/.dsh/settings.yaml"
+llm-pi-ai:
+  providers:
+    openrouter:
+      apiKeyEnv: OPENROUTER_API_KEY
+agent-default-model:
+  provider: openrouter
+  model: deepseek/deepseek-chat
+EOF
+chmod 600 "$HOME/.dsh/settings.yaml"
 
 cat << EOF > "$HOME/.dsh/.env"
 OPENROUTER_API_KEY="${OR_KEY}"
