@@ -49,6 +49,10 @@ chmod 700 "$HOME/.dsh"
 # 7. Generate the Unified Zero-Plaintext Master Patch Orchestration Template (Top-level YAML Array)
 echo "✍️ Writing verified configuration patch layer to ~/.dsh/cordis.patch.yml..."
 cat << 'EOF' > "$HOME/.dsh/cordis.patch.yml"
+# Disable default official DeepSeek provider in favor of OpenRouter Gateway
+- id: llm-deepseek
+  disabled: true
+
 # Disable default paid DeepSeek search in favor of free ModSearch
 - id: web-search-deepseek
   disabled: true
