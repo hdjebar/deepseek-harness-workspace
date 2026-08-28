@@ -1,0 +1,26 @@
+{
+  "name": "deepseek-harness-workspace",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^7"
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh": "^0.1.1-rc.2",
+    "dsh-tui": "^0.2.19"
+  },
+  "trustedDependencies": [
+    "@deepseek-ai/dsh-subprocess-local",
+    "@google/genai",
+    "koffi",
+    "protobufjs"
+  ],
+  "scripts": {
+    "web": "dsh web",
+    "cli": "dsh-tui",
+    "headless": "dsh --profile headless",
+    "sync-models": "bun run sync-models.js"
+  }
+}
