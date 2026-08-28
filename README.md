@@ -40,6 +40,7 @@ An advanced, production-configured multi-interface AI engineering workspace buil
   * **VS Code Web Layout (`dsh-better-sidebar`):** Full browser IDE experience with multi-tab editor, tree explorer, live terminal, and git diff viewer.
   * **Terminal Keyboard Matrix (`dsh-tui`):** Fast, keyboard-driven Vim-style terminal client.
 * **Unified MCP Control Room (`dsh-mcp-panel`):** Auto-discovers local Model Context Protocol servers and provides a trial execution console with version-backed backups.
+* **Models Pro / Advanced Model Configurator (`dsh-provider-model-configurator`):** Dedicated UI in Settings (`Model Pro`) to create, edit, copy presets, and tune context windows, max tokens, modalities, and reasoning effort.
 * **Plugin Storefront & Discovery (`dshmarket` & `dsh-find-plugin`):** Integrated GUI store and natural-language GitHub topic discovery for community plugins.
 * **Tmux Context Integration (`@deepseek-ai/dsh-tmux-context`):** Observes active terminal states and session context to enrich LLM prompts.
 

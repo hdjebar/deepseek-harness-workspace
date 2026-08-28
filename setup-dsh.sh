@@ -101,7 +101,7 @@ EOF
 
 # 8. Explicitly resolve and link verified public ecosystem modules into the runtime profile
 echo "🔐 Deploying and linking external multi-profile plugin segments..."
-bunx @deepseek-ai/dsh plugin --profile web add dshmarket dsh-mcp-panel dsh-better-sidebar dsh-find-plugin @liustack/modsearch
+bunx @deepseek-ai/dsh plugin --profile web add dshmarket dsh-mcp-panel dsh-better-sidebar dsh-find-plugin @liustack/modsearch github:LiangYin233/dsh-provider-model-configurator
 
 # 9. Store OpenRouter API credentials and configure ~/.dsh/settings.yaml
 echo "🗝️ Injecting tokens securely into ~/.dsh/.credentials.yaml and configuring ~/.dsh/settings.yaml..."
