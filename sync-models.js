@@ -47,7 +47,7 @@ ${modelsYaml}`;
 
     // Replace openrouter provider section
     const updatedContent = patchContent.replace(
-      /openrouter:[\s\S]*?(?=\n# Route default model|\n- id: agent-default-model)/,
+      /[ \t]*openrouter:[\s\S]*?(?=\n# Route default model|\n- id: agent-default-model)/,
       openrouterBlock + "\n"
     );
 
