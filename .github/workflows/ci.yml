@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  bootstrap:
+    name: Bootstrap script checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bash syntax check
+        run: bash -n setup-dsh.sh
+
+      # Advisory until findings are cleared: flip continue-on-error to false once clean.
+      - name: ShellCheck
+        continue-on-error: true
+        run: shellcheck --severity=style setup-dsh.sh
+
+      - name: Embedded sync tool matches sync-models.js
+        run: |
+          awk 'index($0, "> sync-models.js") && index($0, "cat <<") {flag=1; next} flag && $0 == "EOF" {flag=0; next} flag' setup-dsh.sh > /tmp/embedded.js
+          test -s /tmp/embedded.js
+          diff -u /tmp/embedded.js sync-models.js
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies (frozen lockfile)
+        run: bun install --frozen-lockfile
+
+      - name: Smoke test sync-models.js (fresh, rerun, missing anchor)
+        run: |
+          FIXTURE_HOME=/tmp/dsh-fixture-home
+          mkdir -p "$FIXTURE_HOME/.dsh"
+          # Reproduce exactly the patch file setup-dsh.sh writes (without the model list)
+          awk 'index($0, "cordis.patch.yml") && index($0, "cat <<") {flag=1; next} flag && $0 == "EOF" {flag=0; next} flag' setup-dsh.sh > "$FIXTURE_HOME/.dsh/cordis.patch.yml"
+          test -s "$FIXTURE_HOME/.dsh/cordis.patch.yml"
+
+          HOME="$FIXTURE_HOME" bun sync-models.js
+          cp "$FIXTURE_HOME/.dsh/cordis.patch.yml" /tmp/after1.yml
+
+          # Re-run must be a byte-identical no-op (idempotency)
+          HOME="$FIXTURE_HOME" bun sync-models.js
+          diff /tmp/after1.yml "$FIXTURE_HOME/.dsh/cordis.patch.yml"
+
+          # Missing anchors must fail loudly
+          sed -i '/# Route default model to OpenRouter/d; /- id: agent-default-model/d' "$FIXTURE_HOME/.dsh/cordis.patch.yml"
+          if HOME="$FIXTURE_HOME" bun sync-models.js; then
+            echo "::error::sync-models.js succeeded although the patch anchor was removed"
+            exit 1
+          fi
+
+      - name: Generated patch is valid YAML
+        run: |
+          python3 -c "import yaml" 2>/dev/null || pip install --quiet pyyaml
+          python3 <<'PY'
+          import yaml
+
+          doc = yaml.safe_load(open("/tmp/after1.yml"))
+          assert isinstance(doc, list) and len(doc) >= 5, "unexpected patch structure"
+          assert any(
+              isinstance(e, dict) and "openrouter" in str(e.get("config", {})) for e in doc
+          ), "openrouter provider block missing"
+          print("patch YAML OK:", len(doc), "entries; openrouter block present")
+          PY

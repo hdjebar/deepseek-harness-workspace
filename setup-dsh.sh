@@ -35,13 +35,16 @@ if [ ! -d ".git" ]; then
 fi
 
 # 5. Initialize project manifest context if missing and install core bundle
+# Reproducible installs: existing manifests resolve through the committed
+# bun.lock; only truly fresh (non-clone) directories take new `bun add` ranges.
+echo "⚡ Installing DeepSeek Harness framework engine & TUI via Bun..."
 if [ ! -f "package.json" ]; then
     bun init -y > /dev/null
     rm -f CLAUDE.md index.ts tsconfig.json || true
+    bun add @deepseek-ai/dsh dsh-tui
+else
+    bun install
 fi
-
-echo "⚡ Pulling DeepSeek Harness framework engine & TUI via Bun..."
-bun add @deepseek-ai/dsh dsh-tui
 
 # 6. Build global user home configuration directory tree and tighten access rights
 echo "🛡️ Establishing strict OS-level folder boundary permissions..."
@@ -97,7 +100,8 @@ EOF
 
 # 8. Explicitly resolve and link verified public ecosystem modules into the runtime profile
 echo "🔐 Deploying and linking external multi-profile plugin segments..."
-bunx @deepseek-ai/dsh plugin --profile web add dshmarket dsh-mcp-panel dsh-better-sidebar dsh-find-plugin @liustack/modsearch github:LiangYin233/dsh-provider-model-configurator
+# dsh-provider-model-configurator is pinned to upstream commit 70f8811 — bump deliberately.
+bunx @deepseek-ai/dsh plugin --profile web add dshmarket dsh-mcp-panel dsh-better-sidebar dsh-find-plugin @liustack/modsearch github:LiangYin233/dsh-provider-model-configurator#70f88112c7d92fadeb93e46f5dcb8b1f3ae6eba3
 
 # 9. Store OpenRouter API credentials and configure ~/.dsh/settings.yaml
 echo "🗝️ Injecting tokens securely into ~/.dsh/.credentials.yaml and configuring ~/.dsh/settings.yaml..."
