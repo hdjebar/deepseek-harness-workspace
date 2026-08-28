@@ -8,20 +8,22 @@ echo "    [OpenRouter + Free Search + VSCode UX + TUI Matrix + Tmux Context]    
 echo "=========================================================================="
 echo ""
 
-# 1. Capture the OpenRouter key silently without outputting it to logs
-read -rsp "Enter your OpenRouter Master API Key (sk-or-...): " OR_KEY; echo ""
-
-# 2. Pre-flight Gate: Validate the captured key pattern
-if [[ -z "${OR_KEY}" || ! "${OR_KEY}" =~ ^sk-or- ]]; then
-    echo "❌ Input Validation Error: Invalid OpenRouter API Key structure."
-    echo "   Your token must begin with the standard 'sk-or-' prefix and cannot be empty."
-    exit 1
-fi
-
-# 3. Enforce structural execution dependency check
+# 1. Enforce structural execution dependency check (Fail-Fast Gate)
 if ! command -v bun &> /dev/null; then
     echo "❌ Execution Aborted: 'bun' binary runtime is missing from your system."
     echo "   Please install it first: curl -fsSL https://bun.sh | bash"
+    exit 1
+fi
+echo "✅ Detected Bun runtime: $(bun --version)"
+echo ""
+
+# 2. Capture the OpenRouter key silently without outputting it to logs
+read -rsp "Enter your OpenRouter Master API Key (sk-or-...): " OR_KEY; echo ""
+
+# 3. Pre-flight Gate: Validate the captured key pattern
+if [[ -z "${OR_KEY}" || ! "${OR_KEY}" =~ ^sk-or- ]]; then
+    echo "❌ Input Validation Error: Invalid OpenRouter API Key structure."
+    echo "   Your token must begin with the standard 'sk-or-' prefix and cannot be empty."
     exit 1
 fi
 
