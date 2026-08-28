@@ -1,0 +1,20 @@
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Environment & Credentials
+.env
+.env.*
+!.env.example
+*.credentials.yaml
+.credentials.yaml
+
+# Node & Bun
+node_modules/
+bun.lock
+bun.lockb
+package-lock.json
+
+# Local DSH runtime & cache
+.dsh/
+*.log
