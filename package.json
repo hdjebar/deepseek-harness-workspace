@@ -21,6 +21,7 @@
     "web": "dsh web",
     "cli": "dsh-tui",
     "headless": "dsh --profile headless",
-    "sync-models": "bun run sync-models.js"
+    "sync-models": "bun run sync-models.js",
+    "doctor": "bun doctor.js"
   }
 }

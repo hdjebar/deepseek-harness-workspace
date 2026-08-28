@@ -55,6 +55,13 @@ jobs:
             exit 1
           fi
 
+      - name: doctor.js fails loudly without credentials (negative test)
+        run: |
+          if HOME=/tmp/dsh-doctor-empty bun doctor.js; then
+            echo "::error::doctor.js should exit non-zero when no credentials are present"
+            exit 1
+          fi
+
       - name: Generated patch is valid YAML
         run: |
           python3 -c "import yaml" 2>/dev/null || pip install --quiet pyyaml

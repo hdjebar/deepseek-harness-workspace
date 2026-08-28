@@ -34,7 +34,7 @@ An advanced, production-configured multi-interface AI engineering workspace buil
 
 ## Core Infrastructure Features
 
-* **Strict POSIX Permission Isolation:** API credentials are protected with strict `0600` user-only permissions (`~/.dsh/.credentials.yaml` and `~/.dsh/.env`) inside the `0700` user home configuration root.
+* **Strict POSIX Permission Isolation:** API credentials live in one place — the managed credential store `~/.dsh/.credentials.yaml` (`0600` user-only) inside the `0700` `~/.dsh` root. The key is validated against OpenRouter before it is ever written, and legacy `.env` plaintext copies are purged on setup.
 * **Unified OpenRouter Gateway:** Routes completions directly to OpenRouter (`https://openrouter.ai/api/v1`) with full support for streaming, function calling, and multimodal inputs.
 * **Live Dynamic Model Sync (`sync-models.js`):** Automatically queries OpenRouter's live API (`https://openrouter.ai/api/v1/models`) to fetch and register all real-time models into your runtime patch.
 * **Free No-Key Web Search & Extraction:** Replaces paid search defaults with `@liustack/modsearch`. Provides zero-configuration web search, Firecrawl scraping, and multi-engine fallback.
@@ -86,6 +86,12 @@ chmod +x setup-dsh.sh
   bun run headless "Analyze codebase and optimize build scripts"
   ```
 
+* **Run the read-only health check (doctor):**
+  ```bash
+  bun run doctor
+  ```
+  *Checks credentials, model catalog, patch integrity, plugins, and port 3080 — reports, never repairs.*
+
 ## Stopping & Killing Running Processes
 
 If a background DSH process, web server, or port (`3080`) is locked or lingering, terminate them safely:
@@ -116,8 +122,17 @@ rm -rf node_modules package.json bun.lock bun.lockb .dsh
 
 After running the reset, execute `./setup-dsh.sh` to reinstall and rebuild from scratch.
 
+## Troubleshooting
+
+* **Model calls fail with `401 Unauthorized`** — the stored key was rejected. Re-run `./setup-dsh.sh` with a fresh key from [openrouter.ai/keys](https://openrouter.ai/keys), or confirm with `bun run doctor`.
+* **`bun run web` reports port 3080 busy** — a previous DSH web server still holds it: `lsof -ti :3080 | xargs kill -9` (see *Stopping & Killing* above), then relaunch.
+* **Setup fails at the plugin step** — `bunx … plugin add` needs network access; re-run `./setup-dsh.sh` once connectivity is back. Setup is idempotent: it rewrites config and re-links plugins without losing your stored key.
+* **Model list stale or empty** — run `bun run sync-models` to re-sync the live catalog; `bun run doctor` prints the current model count.
+* **`sync-models` fails with "Failed to locate the openrouter block anchor"** — `~/.dsh/cordis.patch.yml` lost its anchor (the `# Route default model` comment or the `agent-default-model` entry), usually from hand-editing. Re-run `./setup-dsh.sh` to regenerate the patch, then sync again.
+* **Not sure what's wrong** — `bun run doctor` prints a per-check ✅/⚠️/❌ summary; fix the ❌ items and re-run until clean.
+
 ## Security & Sandboxing
 
 Agent filesystem access is enforced by DSH's **runtime file sandbox**, not by the cordis patch layer: every file mutation is fenced by a per-session sandbox mode — `read-only`, `workspace-write` (mutations allowed only under the session's workspace root), or `danger-full-access` — and wider modes are gated behind the interactive approval policy. This bootstrap makes no patch-level changes to that policy; the previously documented `workspace.restrict_to_cwd` patch entry had no effect on the current runtime and has been removed.
 
-Credentials are protected at the OS level: `0600` user-only permissions on `~/.dsh/.credentials.yaml`, `~/.dsh/settings.yaml`, and `~/.dsh/.env`, inside the `0700` `~/.dsh` root.
+Credentials are protected at the OS level: the managed store `~/.dsh/.credentials.yaml` and `~/.dsh/settings.yaml` carry `0600` user-only permissions inside the `0700` `~/.dsh` root, and no `.env` plaintext copy is kept.

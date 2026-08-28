@@ -28,6 +28,16 @@ if [[ -z "${OR_KEY}" || ! "${OR_KEY}" =~ ^sk-or- ]]; then
     exit 1
 fi
 
+# 3b. Remote Gate: validate the key against OpenRouter before anything is written
+echo "🔑 Validating key against the OpenRouter API..."
+KEY_STATUS="$(OR_KEY="${OR_KEY}" bun -e 'const r = await fetch("https://openrouter.ai/api/v1/auth/key", { headers: { Authorization: `Bearer ${process.env.OR_KEY}` } }); console.log(r.status)' || echo 000)"
+if [ "${KEY_STATUS}" != "200" ]; then
+    echo "❌ OpenRouter rejected this key (HTTP ${KEY_STATUS})."
+    echo "   Verify it at https://openrouter.ai/keys, then re-run ./setup-dsh.sh."
+    exit 1
+fi
+echo "✅ OpenRouter accepted the key."
+
 # 4. Enforce the Git repository boundary contract (Required by Harness Loops)
 if [ ! -d ".git" ]; then
     echo "📦 Target directory is un-tracked. Initializing a clean Git workspace repository..."
@@ -103,8 +113,8 @@ echo "🔐 Deploying and linking external multi-profile plugin segments..."
 # dsh-provider-model-configurator is pinned to upstream commit 70f8811 — bump deliberately.
 bunx @deepseek-ai/dsh plugin --profile web add dshmarket dsh-mcp-panel dsh-better-sidebar dsh-find-plugin @liustack/modsearch github:LiangYin233/dsh-provider-model-configurator#70f88112c7d92fadeb93e46f5dcb8b1f3ae6eba3
 
-# 9. Store OpenRouter API credentials and configure ~/.dsh/settings.yaml
-echo "🗝️ Injecting tokens securely into ~/.dsh/.credentials.yaml and configuring ~/.dsh/settings.yaml..."
+# 9. Store OpenRouter API credentials in the managed credential store and configure ~/.dsh/settings.yaml
+echo "🗝️ Injecting token into the managed store ~/.dsh/.credentials.yaml and configuring ~/.dsh/settings.yaml..."
 cat << EOF > "$HOME/.dsh/.credentials.yaml"
 version: 1
 refs:
@@ -123,10 +133,9 @@ agent-default-model:
 EOF
 chmod 600 "$HOME/.dsh/settings.yaml"
 
-cat << EOF > "$HOME/.dsh/.env"
-OPENROUTER_API_KEY="${OR_KEY}"
-EOF
-chmod 600 "$HOME/.dsh/.env"
+# Single-copy consolidation: the managed store outranks the ~/.dsh/.env
+# user-env fallback layer, so purge the legacy plaintext duplicate.
+rm -f "$HOME/.dsh/.env"
 
 # 10. Provision the sync tool on fresh setups, and upgrade pre-hardening copies
 # (older embedded versions failed silently when the patch anchor was missing)
@@ -207,7 +216,7 @@ bun pm trust --all || true
 bun -e '
   const fs = require("fs");
   const p = JSON.parse(fs.readFileSync("package.json", "utf8"));
-  p.scripts = { ...p.scripts, web: "dsh web", cli: "dsh-tui", headless: "dsh --profile headless", "sync-models": "bun run sync-models.js" };
+  p.scripts = { ...p.scripts, web: "dsh web", cli: "dsh-tui", headless: "dsh --profile headless", "sync-models": "bun run sync-models.js", ...(fs.existsSync("doctor.js") ? { doctor: "bun doctor.js" } : {}) };
   fs.writeFileSync("package.json", JSON.stringify(p, null, 2));
 '
 
@@ -222,4 +231,5 @@ echo "➡️ To boot the VS-Code Web Workbench UI:       bun run web"
 echo "➡️ To boot the Keyboard-First Terminal TUI:     bun run cli"
 echo "➡️ To resync live OpenRouter models (LOV):      bun run sync-models"
 echo "➡️ To invoke the Headless background pipeline:  bun run headless \"Your task\""
+echo "➡️ To run the read-only health check:          bun run doctor"
 echo "--------------------------------------------------------"
