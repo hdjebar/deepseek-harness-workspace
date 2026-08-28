@@ -57,7 +57,28 @@ cat << 'EOF' > "$HOME/.dsh/cordis.patch.yml"
   config:
     searchProvider: modsearch
 
-# Route default model to OpenRouter
+# Configure LLM Provider via llm-pi-ai (OpenRouter)
+- id: llm-pi-ai
+  config:
+    providers:
+      openrouter:
+        apiKeyEnv: OPENROUTER_API_KEY
+        displayName: "OpenRouter"
+        api: openai-completions
+        baseURL: "https://openrouter.ai/api/v1"
+        models:
+          - id: deepseek/deepseek-chat
+            name: "DeepSeek V3"
+          - id: deepseek/deepseek-r1
+            name: "DeepSeek R1"
+          - id: anthropic/claude-3.5-sonnet
+            name: "Claude 3.5 Sonnet"
+          - id: google/gemini-2.5-flash
+            name: "Gemini 2.5 Flash"
+          - id: openai/gpt-4o
+            name: "GPT-4o"
+
+# Route default model to OpenRouter DeepSeek V3
 - id: agent-default-model
   config:
     provider: openrouter
