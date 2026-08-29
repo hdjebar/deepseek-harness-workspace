@@ -104,15 +104,31 @@ function resolveKey() {
   const envKey = process.env.OPENROUTER_API_KEY;
   if (envKey) return { key: envKey, source: "inherited environment" };
 
-  const credDoc = readIfExists(path.join(HOME_DSH, ".credentials.yaml"));
+  const credPath = path.join(HOME_DSH, ".credentials.yaml");
+  const credDoc = readIfExists(credPath);
   if (credDoc) {
-    const verMatch = credDoc.match(/^\s*version:\s*(\d+)/m);
-    if (verMatch && parseInt(verMatch[1], 10) !== 1) {
-      fail("Credential schema", `${DISPLAY_TARGET}/.credentials.yaml has unsupported schema version ${verMatch[1]} (runtime requires version: 1)`);
+    try {
+      let key;
+      try {
+        const { parseCredentialsDocument } = require("@deepseek-ai/dsh-credentials-local");
+        const parsed = parseCredentialsDocument(credDoc, credPath);
+        key = parsed.refs.get("OPENROUTER_API_KEY");
+      } catch (err) {
+        if (err.code !== "MODULE_NOT_FOUND" && !String(err.message).includes("Cannot find module")) throw err;
+        const verMatch = credDoc.match(/^\s*version:\s*(\d+)/m);
+        if (!verMatch || parseInt(verMatch[1], 10) !== 1) {
+          throw new Error(`credentials-local: ${credPath} must declare version: 1`);
+        }
+        const m = credDoc.match(/^\s*OPENROUTER_API_KEY\s*:\s*["']?([^\s"'\r\n]+)["']?/m);
+        if (m) key = m[1];
+      }
+      if (key) return { key, source: `${DISPLAY_TARGET}/.credentials.yaml (managed store)` };
+      fail("OpenRouter credential missing", `${DISPLAY_TARGET}/.credentials.yaml has no OPENROUTER_API_KEY in refs`);
+      return null;
+    } catch (err) {
+      fail("Credential schema", err.message);
       return null;
     }
-    const mRefs = credDoc.match(/^\s*(?:refs:\s*\n)?\s*OPENROUTER_API_KEY:\s*["']?([^\s"'\r\n]+)["']?/m);
-    if (mRefs) return { key: mRefs[1], source: `${DISPLAY_TARGET}/.credentials.yaml (managed store)` };
   }
 
   const userEnv = readIfExists(path.join(HOME_DSH, ".env"));

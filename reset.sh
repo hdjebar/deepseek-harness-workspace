@@ -42,7 +42,8 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Precedence: --dir → --global → DSH_HOME → local $PWD/.dsh
+# Precedence: --dir → --global → DSH_HOME → .dsh-target marker → local $PWD/.dsh
+TARGET_MARKER="$PWD/.dsh-target"
 if [[ -n "$CUSTOM_DIR" ]]; then
     TARGET_DSH="$(mkdir -p "$CUSTOM_DIR" 2>/dev/null && cd "$CUSTOM_DIR" && pwd || echo "$CUSTOM_DIR")"
     IS_LOCAL_MODE=false
@@ -52,6 +53,15 @@ elif [ "$GLOBAL_RESET" = true ]; then
 elif [[ -n "${DSH_HOME:-}" ]]; then
     TARGET_DSH="$(cd "$DSH_HOME" 2>/dev/null && pwd || echo "$DSH_HOME")"
     IS_LOCAL_MODE=$([ "$TARGET_DSH" = "$PWD/.dsh" ] && echo true || echo false)
+elif [ -f "$TARGET_MARKER" ]; then
+    RAW_MARKER="$(head -n 1 "$TARGET_MARKER" | tr -d '[:space:]')"
+    if [ "$RAW_MARKER" = "~/.dsh" ] || [ "$RAW_MARKER" = "global" ]; then
+        TARGET_DSH="$HOME/.dsh"
+        IS_LOCAL_MODE=false
+    else
+        TARGET_DSH="$(cd "$RAW_MARKER" 2>/dev/null && pwd || echo "$RAW_MARKER")"
+        IS_LOCAL_MODE=$([ "$TARGET_DSH" = "$PWD/.dsh" ] && echo true || echo false)
+    fi
 else
     TARGET_DSH="$PWD/.dsh"
     IS_LOCAL_MODE=true
@@ -147,9 +157,10 @@ echo "✅ Configuration purged."
 
 if [ "$IS_LOCAL_MODE" = true ]; then
     echo "🗑️  [3/3] Cleaning local workspace artifacts (node_modules, caches, logs)..."
-    rm -rf node_modules .dsh ./*.log
+    rm -rf node_modules .dsh ./*.log "$TARGET_MARKER"
     echo "✅ Local workspace cleaned."
 else
+    rm -f "$TARGET_MARKER"
     echo "🗑️  [3/3] Target configuration reset complete."
 fi
 

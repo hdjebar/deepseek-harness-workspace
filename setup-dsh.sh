@@ -54,14 +54,8 @@ DSH_DIR="$(cd "${DSH_TARGET}" 2>/dev/null && pwd || echo "${DSH_TARGET}")"
 export DSH_HOME="${DSH_DIR}"
 
 if [ "${DSH_DIR}" = "$HOME/.dsh" ]; then
-    rm -f .dsh-target
     echo "📁 DSH Configuration Target: ~/.dsh (Global Mode)"
 else
-    if [[ "${DSH_DIR}" == "$PWD"/* ]]; then
-        printf './%s\n' "${DSH_DIR#$PWD/}" > .dsh-target
-    else
-        printf '%s\n' "${DSH_DIR}" > .dsh-target
-    fi
     echo "📁 DSH Configuration Target: ${DSH_DIR} (Workspace Mode)"
 fi
 echo ""
@@ -368,9 +362,17 @@ EOF
     chmod +x sync-models.js
 fi
 
-# 11. Programmatically bind scripts using 100% Bun Execution
-echo "📌 Writing runtime script bindings to your local package.json..."
+# 11. Programmatically bind scripts and commit target routing marker
+echo "📌 Writing runtime script bindings and committing target routing..."
 bun pm trust --all || true
+if [ "${DSH_DIR}" = "$HOME/.dsh" ]; then
+    echo "global" > .dsh-target
+elif [[ "${DSH_DIR}" == "$PWD"/* ]]; then
+    printf './%s\n' "${DSH_DIR#"$PWD"/}" > .dsh-target
+else
+    printf '%s\n' "${DSH_DIR}" > .dsh-target
+fi
+
 # shellcheck disable=SC2016
 bun -e '
   const fs = require("fs");

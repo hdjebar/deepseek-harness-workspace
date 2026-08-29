@@ -8,9 +8,18 @@ const port = process.env.DSH_PORT || process.env.PORT;
 
 const args = ["web", ...userArgs];
 
-// Only append --port if user did not explicitly pass --port or -p in userArgs
-const hasPortArg = userArgs.some((arg, i) => arg === "--port" || arg === "-p" || arg.startsWith("--port="));
-if (port && !hasPortArg) {
+// Check if user already provided port or if this is a dump / help command (which reject app args)
+const hasPortArg = userArgs.some((arg) => arg === "--port" || arg === "-p" || arg.startsWith("--port="));
+const isDumpOrHelp = userArgs.some((arg) =>
+  arg === "--dump-config" ||
+  arg === "--dump-default-config" ||
+  arg === "--help" ||
+  arg === "-h" ||
+  arg === "--version" ||
+  arg === "-v"
+);
+
+if (port && !hasPortArg && !isDumpOrHelp) {
   args.push("--port", String(port));
 }
 

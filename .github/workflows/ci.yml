@@ -9,6 +9,8 @@ jobs:
   bootstrap:
     name: Bootstrap script checks
     runs-on: ubuntu-latest
+    env:
+      FIXTURE_HOME: /tmp/dsh-fixture-home
     steps:
       - uses: actions/checkout@v5
 
@@ -35,7 +37,6 @@ jobs:
 
       - name: Smoke test sync-models.js (fresh, rerun, missing anchor)
         run: |
-          FIXTURE_HOME=/tmp/dsh-fixture-home
           mkdir -p "$FIXTURE_HOME/.dsh"
           # Reproduce exactly the patch file setup-dsh.sh writes (without the model list)
           awk 'index($0, "cordis.patch.yml") && index($0, "cat <<") {flag=1; next} flag && $0 == "EOF" {flag=0; next} flag' setup-dsh.sh > "$FIXTURE_HOME/.dsh/cordis.patch.yml"
