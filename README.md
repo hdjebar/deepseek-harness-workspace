@@ -6,6 +6,7 @@
 [![Bun Runtime](https://img.shields.io/badge/Bun-1.2%2B-000000?style=for-the-badge&logo=bun&logoColor=white)](https://bun.sh)
 [![DeepSeek Harness](https://img.shields.io/badge/@deepseek--ai/dsh-0.1.1--rc.2-0066FF?style=for-the-badge&logo=codeforces&logoColor=white)](https://github.com/deepseek-ai)
 [![OpenRouter](https://img.shields.io/badge/OpenRouter-390%2B%20Live%20Models-6366F1?style=for-the-badge&logo=openai&logoColor=white)](https://openrouter.ai)
+[![Free Search](https://img.shields.io/badge/Web%20Search-%40liustack%2Fmodsearch%20(Free)-06B6D4?style=for-the-badge&logo=searxng&logoColor=white)](https://www.npmjs.com/package/@liustack/modsearch)
 [![Security](https://img.shields.io/badge/Security-POSIX%200600%20Isolated-10B981?style=for-the-badge&logo=auth0&logoColor=white)](#-security--sandboxing)
 [![CI Status](https://img.shields.io/badge/CI-Passing%20100%25-22C55E?style=for-the-badge&logo=githubactions&logoColor=white)](#-automated-ci--quality-gates)
 [![License](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](LICENSE)
@@ -17,7 +18,7 @@
 
 ---
 
-[🚀 Quick Start](#-quick-start-in-60-seconds) • [✨ Key Features](#-core-capabilities) • [🏛️ Architecture](#%EF%B8%8F-system-architecture) • [💻 Interfaces](#-runtime-interfaces) • [🩺 Health Doctor](#-diagnostic-health-check) • [🛡️ Security](#-security--sandboxing)
+[🚀 Quick Start](#-quick-start-in-60-seconds) • [✨ Key Features](#-core-capabilities) • [🔍 Free Search](#-zero-cost-web-search-modsearch) • [🏛️ Architecture](#%EF%B8%8F-system-architecture) • [💻 Interfaces](#-runtime-interfaces) • [🩺 Health Doctor](#-diagnostic-health-check) • [🛡️ Security](#-security--sandboxing)
 
 ---
 
@@ -29,12 +30,34 @@
 | :--- | :--- |
 | 🌐 **Universal Gateway** | Stream completions directly from [OpenRouter](https://openrouter.ai) with streaming, tool calling, and multimodal reasoning across **390+ models**. |
 | 🔄 **Live Dynamic Model Sync** | `bun run sync-models` queries OpenRouter's live API to automatically register new frontier models into your runtime patch. |
+| 🔍 **Zero-Cost Web Search** | Pre-integrated `@liustack/modsearch` replaces paid search APIs with zero-config multi-engine web search & Firecrawl scraping. |
 | 🖥️ **Dual Interface Matrix** | Switch seamlessly between a **VS Code-style browser IDE** (`dsh-better-sidebar`) and a **Vim-inspired terminal matrix** (`dsh-tui`). |
-| 🔍 **Zero-Cost Web Search** | Integrated `@liustack/modsearch` replaces paid search APIs with zero-config multi-engine web search & Firecrawl scraping. |
 | 🛡️ **Zero-Plaintext Security** | POSIX-isolated managed credential store (`0600` permissions in a `0700` root) with pre-flight API key verification and automatic `.env` purging. |
 | 🔌 **Integrated MCP Hub** | Built-in Model Context Protocol panel (`dsh-mcp-panel`) with auto-discovery, trial execution console, and versioned backups. |
 | ⚙️ **Models Pro Configurator** | Dedicated Settings UI (`dsh-provider-model-configurator`) to tune context windows, max tokens, sampling parameters, and reasoning budgets. |
 | 🩺 **Non-Destructive Doctor** | Instant health diagnostics (`doctor.js`) validating runtime integrity, port bindings, permissions, and network connectivity. |
+
+---
+
+## 🔍 Zero-Cost Web Search (`@liustack/modsearch`)
+
+Standard AI agent harnesses often rely on expensive search APIs (Tavily, Bing, Google Search API) with separate monthly quotas and rate limits. This workspace integrates **[`@liustack/modsearch`](https://www.npmjs.com/package/@liustack/modsearch)** directly into the runtime profile.
+
+### 🌟 Why `@liustack/modsearch`?
+* 🆓 **Zero API Keys & Zero Cost:** Queries the web without requiring any subscription or credit card.
+* 🌐 **Multi-Engine Aggregator:** Automatically queries and falls back between DuckDuckGo, Bing, and open web indexers.
+* 🕷️ **Clean Web Scraping:** Uses Firecrawl-compatible web extraction to deliver sanitized, readable Markdown directly into the agent's reasoning loop.
+* ⚡ **Zero-Code Override:** Pre-configured in `~/.dsh/cordis.patch.yml` to automatically intercept and replace default paid search providers:
+
+```yaml
+# Disable default paid search in favor of free ModSearch
+- id: web-search-deepseek
+  disabled: true
+
+- id: web
+  config:
+    searchProvider: modsearch
+```
 
 ---
 
