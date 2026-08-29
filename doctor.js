@@ -13,33 +13,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
-
-function resolveDshDir() {
-  if (process.env.DSH_HOME) {
-    let raw = process.env.DSH_HOME.trim();
-    if (raw.startsWith("~")) raw = path.join(os.homedir(), raw.slice(1));
-    return path.resolve(raw);
-  }
-  const targetFile = path.join(process.cwd(), ".dsh-target");
-  if (fs.existsSync(targetFile)) {
-    try {
-      let content = fs.readFileSync(targetFile, "utf8").trim();
-      if (content) {
-        if (content.startsWith("~")) content = path.join(os.homedir(), content.slice(1));
-        return path.resolve(process.cwd(), content);
-      }
-    } catch { /* ignore read failure */ }
-  }
-  const localDir = path.join(process.cwd(), ".dsh");
-  const localConfig = fs.existsSync(path.join(localDir, "cordis.patch.yml")) || fs.existsSync(path.join(localDir, ".credentials.yaml"));
-  const globalDir = path.join(os.homedir(), ".dsh");
-  const globalConfig = fs.existsSync(path.join(globalDir, "cordis.patch.yml")) || fs.existsSync(path.join(globalDir, ".credentials.yaml"));
-
-  if (localConfig) return localDir;
-  if (globalConfig) return globalDir;
-  if (fs.existsSync(localDir)) return localDir;
-  return globalDir;
-}
+import { resolveDshDir } from "./bin/resolve-dsh.js";
 
 const HOME_DSH = resolveDshDir();
 const rel = path.relative(process.cwd(), HOME_DSH);

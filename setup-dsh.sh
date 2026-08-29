@@ -28,7 +28,7 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Options:"
             echo "  (default)          Install configuration locally into ./.dsh (isolated per workspace)"
-            echo "  --global, -g       Install configuration globally into $HOME/.dsh (shared across projects)"
+            echo "  --global, -g       Install configuration globally into ${HOME:-~}/.dsh (shared across projects)"
             echo "  --dir, -d <path>   Install configuration into a custom directory"
             echo "  --help, -h         Show this help message"
             exit 0
@@ -53,8 +53,9 @@ mkdir -p "${DSH_TARGET}"
 DSH_DIR="$(cd "${DSH_TARGET}" 2>/dev/null && pwd || echo "${DSH_TARGET}")"
 export DSH_HOME="${DSH_DIR}"
 
-if [ "${DSH_DIR}" = "$HOME/.dsh" ]; then
-    echo "📁 DSH Configuration Target: $HOME/.dsh (Global Mode)"
+USER_HOME="${HOME:-$(cd ~ 2>/dev/null && pwd || echo "")}"
+if [ -n "$USER_HOME" ] && [ "${DSH_DIR}" = "${USER_HOME}/.dsh" ]; then
+    echo "📁 DSH Configuration Target: ${USER_HOME}/.dsh (Global Mode)"
 else
     echo "📁 DSH Configuration Target: ${DSH_DIR} (Workspace Mode)"
 fi
@@ -265,7 +266,7 @@ if [ ! -f "sync-models.js" ] || ! grep -q "openrouter block anchor" sync-models.
 #!/usr/bin/env bun
 import fs from "node:fs";
 import path from "node:path";
-import os from "node:os";
+import { resolveDshDir } from "./bin/resolve-dsh.js";
 
 async function syncOpenRouterModels() {
   console.log("🌐 Fetching live model catalog from OpenRouter API (https://openrouter.ai/api/v1/models)...");
@@ -290,44 +291,13 @@ async function syncOpenRouterModels() {
     name: m.name || m.id
   }));
 
-  let dshDir;
-  if (process.env.DSH_HOME) {
-    let raw = process.env.DSH_HOME.trim();
-    if (raw.startsWith("~")) raw = path.join(os.homedir(), raw.slice(1));
-    dshDir = path.resolve(raw);
-  } else {
-    const targetFile = path.join(process.cwd(), ".dsh-target");
-    if (fs.existsSync(targetFile)) {
-      try {
-        let content = fs.readFileSync(targetFile, "utf8").trim();
-        if (content) {
-          if (content.startsWith("~")) content = path.join(os.homedir(), content.slice(1));
-          dshDir = path.resolve(process.cwd(), content);
-        }
-      } catch { /* ignore read failure */ }
-    }
-    if (!dshDir) {
-      const localDir = path.join(process.cwd(), ".dsh");
-      const localPatch = fs.existsSync(path.join(localDir, "cordis.patch.yml"));
-      const globalDir = path.join(os.homedir(), ".dsh");
-      const globalPatch = fs.existsSync(path.join(globalDir, "cordis.patch.yml"));
-
-      if (localPatch) dshDir = localDir;
-      else if (globalPatch) dshDir = globalDir;
-      else if (fs.existsSync(localDir)) dshDir = localDir;
-      else dshDir = globalDir;
-    }
-  }
-
+  const dshDir = resolveDshDir();
   const patchPath = path.join(dshDir, "cordis.patch.yml");
   if (!fs.existsSync(patchPath)) {
     throw new Error(`cordis.patch.yml not found at ${patchPath}`);
   }
 
   const patchContent = fs.readFileSync(patchPath, "utf8");
-  if (!patchContent.includes("openrouter:")) {
-    throw new Error("Target 'openrouter:' provider section not found in cordis.patch.yml");
-  }
 
   const modelsYaml = models.map(m => {
     const safeId = String(m.id).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
@@ -365,7 +335,7 @@ fi
 # 11. Programmatically bind scripts and commit target routing marker
 echo "📌 Writing runtime script bindings and committing target routing..."
 bun pm trust --all || true
-if [ "${DSH_DIR}" = "$HOME/.dsh" ]; then
+if [ -n "${USER_HOME:-}" ] && [ "${DSH_DIR}" = "${USER_HOME}/.dsh" ]; then
     echo "global" > .dsh-target
 elif [[ "${DSH_DIR}" == "$PWD"/* ]]; then
     printf './%s\n' "${DSH_DIR#"$PWD"/}" > .dsh-target

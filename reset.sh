@@ -29,7 +29,7 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Options:"
             echo "  (default)          Reset local workspace configuration (./.dsh) and artifacts"
-            echo "  --global, -g       Reset global configuration ($HOME/.dsh) only"
+            echo "  --global, -g       Reset global configuration (${HOME:-~}/.dsh) only"
             echo "  --dir, -d <path>   Reset custom configuration directory only"
             echo "  --force, -f, -y    Skip confirmation prompt"
             echo "  --help, -h         Show this help message"
@@ -42,24 +42,48 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Precedence: --dir → --global → DSH_HOME → .dsh-target marker → local $PWD/.dsh
 TARGET_MARKER="$PWD/.dsh-target"
+RAW_MARKER=""
+if [ -f "$TARGET_MARKER" ]; then
+    IFS= read -r RAW_MARKER < "$TARGET_MARKER" || true
+    # Trim only leading and trailing whitespace losslessly (preserving internal spaces)
+    RAW_MARKER="${RAW_MARKER#"${RAW_MARKER%%[![:space:]]*}"}"
+    RAW_MARKER="${RAW_MARKER%"${RAW_MARKER##*[![:space:]]}"}"
+fi
+
+IS_GLOBAL_MARKER=false
+USER_HOME="${HOME:-$(cd ~ 2>/dev/null && pwd || echo "")}"
+if [ "$RAW_MARKER" = "global" ] || [ "$RAW_MARKER" = "~/.dsh" ] || [ "$RAW_MARKER" = "${USER_HOME}/.dsh" ]; then
+    IS_GLOBAL_MARKER=true
+fi
+
+# Precedence: --dir → --global → DSH_HOME → .dsh-target marker → local $PWD/.dsh
 if [[ -n "$CUSTOM_DIR" ]]; then
     TARGET_DSH="$(mkdir -p "$CUSTOM_DIR" 2>/dev/null && cd "$CUSTOM_DIR" && pwd || echo "$CUSTOM_DIR")"
     IS_LOCAL_MODE=false
 elif [ "$GLOBAL_RESET" = true ]; then
-    TARGET_DSH="$HOME/.dsh"
+    TARGET_DSH="${USER_HOME}/.dsh"
     IS_LOCAL_MODE=false
 elif [[ -n "${DSH_HOME:-}" ]]; then
     TARGET_DSH="$(cd "$DSH_HOME" 2>/dev/null && pwd || echo "$DSH_HOME")"
     IS_LOCAL_MODE=$([ "$TARGET_DSH" = "$PWD/.dsh" ] && echo true || echo false)
-elif [ -f "$TARGET_MARKER" ]; then
-    RAW_MARKER="$(head -n 1 "$TARGET_MARKER" | tr -d '[:space:]')"
-    if [ "$RAW_MARKER" = "$HOME/.dsh" ] || [ "$RAW_MARKER" = "global" ]; then
-        TARGET_DSH="$HOME/.dsh"
-        IS_LOCAL_MODE=false
+elif [ -n "$RAW_MARKER" ]; then
+    if [ "$IS_GLOBAL_MARKER" = true ]; then
+        # If workspace is linked to global DSH, a default reset only clears local workspace routing
+        echo "ℹ️  Workspace is configured in global DSH mode (${USER_HOME}/.dsh)."
+        echo "🧹 Purging local workspace routing (.dsh-target) and temporary artifacts..."
+        rm -rf node_modules .dsh ./*.log "$TARGET_MARKER"
+        echo "✅ Local workspace cleaned. Global store (${USER_HOME}/.dsh) was preserved."
+        echo "   (To reset global configuration, explicitly run: ./reset.sh --global)"
+        exit 0
     else
-        TARGET_DSH="$(cd "$RAW_MARKER" 2>/dev/null && pwd || echo "$RAW_MARKER")"
+        # Expand leading tilde if present
+        if [[ "$RAW_MARKER" == "~"* ]]; then
+            EXPANDED_MARKER="${USER_HOME}${RAW_MARKER#\~}"
+        else
+            EXPANDED_MARKER="$RAW_MARKER"
+        fi
+        TARGET_DSH="$(cd "$EXPANDED_MARKER" 2>/dev/null && pwd || echo "$EXPANDED_MARKER")"
         IS_LOCAL_MODE=$([ "$TARGET_DSH" = "$PWD/.dsh" ] && echo true || echo false)
     fi
 else
@@ -69,13 +93,26 @@ fi
 
 # Safety check against dangerous recursive targets
 REAL_TARGET="$(cd "$TARGET_DSH" 2>/dev/null && pwd || echo "$TARGET_DSH")"
-if [[ "$REAL_TARGET" == "/" || "$REAL_TARGET" == "$HOME" || "$REAL_TARGET" == "/tmp" || "$REAL_TARGET" == "$PWD" || "$REAL_TARGET" == "/var" || "$REAL_TARGET" == "/usr" || "$REAL_TARGET" == "/etc" ]]; then
+if [[ "$REAL_TARGET" == "/" || "$REAL_TARGET" == "$PWD" || "$REAL_TARGET" == "/tmp" || "$REAL_TARGET" == "/var" || "$REAL_TARGET" == "/usr" || "$REAL_TARGET" == "/etc" || ( -n "$USER_HOME" && "$REAL_TARGET" == "$USER_HOME" ) ]]; then
     echo "❌ Safety Abort: Refusing to reset dangerous target directory '${REAL_TARGET}'."
     exit 1
 fi
 
+# Installation-owned sentinel verification: ensure target is an authentic DSH directory before deleting
+if [ -d "$REAL_TARGET" ]; then
+    if [ ! -f "$REAL_TARGET/cordis.patch.yml" ] && \
+       [ ! -f "$REAL_TARGET/.credentials.yaml" ] && \
+       [ ! -f "$REAL_TARGET/settings.yaml" ] && \
+       [ ! -f "$REAL_TARGET/dsh.pid" ] && \
+       [ ! -d "$REAL_TARGET/profiles" ]; then
+        echo "❌ Safety Abort: Directory '${REAL_TARGET}' does not appear to be a valid DSH installation."
+        echo "   (Missing cordis.patch.yml, .credentials.yaml, settings.yaml, dsh.pid, or profiles/)"
+        exit 1
+    fi
+fi
+
 # If target directory doesn't exist in local mode and no local artifacts exist
-if [ "$IS_LOCAL_MODE" = true ] && [ ! -d "$TARGET_DSH" ] && [ ! -d "node_modules" ]; then
+if [ "$IS_LOCAL_MODE" = true ] && [ ! -d "$TARGET_DSH" ] && [ ! -d "node_modules" ] && [ ! -f "$TARGET_MARKER" ]; then
     echo "ℹ️  No local DSH workspace configuration (./.dsh) or node_modules found in $PWD."
     echo "   Nothing to reset locally. (To reset global configuration, run: ./reset.sh --global)"
     exit 0
@@ -160,7 +197,17 @@ if [ "$IS_LOCAL_MODE" = true ]; then
     rm -rf node_modules .dsh ./*.log "$TARGET_MARKER"
     echo "✅ Local workspace cleaned."
 else
-    rm -f "$TARGET_MARKER"
+    # Only remove target marker if the reset target actually matched the marker
+    if [ -f "$TARGET_MARKER" ]; then
+        RESOLVED_MARKER="${RAW_MARKER}"
+        if [[ "$RESOLVED_MARKER" == "~"* ]]; then
+            RESOLVED_MARKER="${USER_HOME}${RESOLVED_MARKER#\~}"
+        fi
+        RESOLVED_MARKER_PATH="$(cd "$RESOLVED_MARKER" 2>/dev/null && pwd || echo "$RESOLVED_MARKER")"
+        if [ "$RESOLVED_MARKER_PATH" = "$REAL_TARGET" ] || [ "$IS_GLOBAL_MARKER" = true ]; then
+            rm -f "$TARGET_MARKER"
+        fi
+    fi
     echo "🗑️  [3/3] Target configuration reset complete."
 fi
 

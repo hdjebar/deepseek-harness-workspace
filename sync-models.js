@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import fs from "node:fs";
 import path from "node:path";
-import os from "node:os";
+import { resolveDshDir } from "./bin/resolve-dsh.js";
 
 async function syncOpenRouterModels() {
   console.log("🌐 Fetching live model catalog from OpenRouter API (https://openrouter.ai/api/v1/models)...");
@@ -26,44 +26,13 @@ async function syncOpenRouterModels() {
     name: m.name || m.id
   }));
 
-  let dshDir;
-  if (process.env.DSH_HOME) {
-    let raw = process.env.DSH_HOME.trim();
-    if (raw.startsWith("~")) raw = path.join(os.homedir(), raw.slice(1));
-    dshDir = path.resolve(raw);
-  } else {
-    const targetFile = path.join(process.cwd(), ".dsh-target");
-    if (fs.existsSync(targetFile)) {
-      try {
-        let content = fs.readFileSync(targetFile, "utf8").trim();
-        if (content) {
-          if (content.startsWith("~")) content = path.join(os.homedir(), content.slice(1));
-          dshDir = path.resolve(process.cwd(), content);
-        }
-      } catch { /* ignore read failure */ }
-    }
-    if (!dshDir) {
-      const localDir = path.join(process.cwd(), ".dsh");
-      const localPatch = fs.existsSync(path.join(localDir, "cordis.patch.yml"));
-      const globalDir = path.join(os.homedir(), ".dsh");
-      const globalPatch = fs.existsSync(path.join(globalDir, "cordis.patch.yml"));
-
-      if (localPatch) dshDir = localDir;
-      else if (globalPatch) dshDir = globalDir;
-      else if (fs.existsSync(localDir)) dshDir = localDir;
-      else dshDir = globalDir;
-    }
-  }
-
+  const dshDir = resolveDshDir();
   const patchPath = path.join(dshDir, "cordis.patch.yml");
   if (!fs.existsSync(patchPath)) {
     throw new Error(`cordis.patch.yml not found at ${patchPath}`);
   }
 
   const patchContent = fs.readFileSync(patchPath, "utf8");
-  if (!patchContent.includes("openrouter:")) {
-    throw new Error("Target 'openrouter:' provider section not found in cordis.patch.yml");
-  }
 
   const modelsYaml = models.map(m => {
     const safeId = String(m.id).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
