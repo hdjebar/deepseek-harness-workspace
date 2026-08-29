@@ -87,11 +87,16 @@ A diagram of the isolated credential store, the dual client interfaces (Web, TUI
 > **Platform support:** DSH targets **macOS and Linux** natively — `setup-dsh.sh` and `reset.sh` are bash scripts, and the credential vault relies on POSIX `chmod` permissions. On Windows, run it inside **WSL2** (fully supported, ~10 minutes, zero code changes). See [docs/windows.md](docs/windows.md) for the WSL2 quick path and a detailed guide for anyone porting a native PowerShell version.
 
 ### 1. Prerequisites
-Ensure the **Bun Runtime** is installed on your host machine:
 
-```bash
-curl -fsSL https://bun.sh/install | bash
-```
+* **Bun Runtime** — everything runs on it:
+  ```bash
+  curl -fsSL https://bun.sh/install | bash
+  ```
+* **Git** — needed to clone this repo, and `setup-dsh.sh` also runs `git init` internally if the target directory isn't already a repository.
+* **An OpenRouter API key** — grab one at [openrouter.ai/keys](https://openrouter.ai/keys). `setup-dsh.sh` prompts for it and validates it against the live API before writing any configuration.
+
+> [!TIP]
+> `pnpm` is **not** a prerequisite — `setup-dsh.sh` installs it automatically via Bun if it isn't already on your `PATH`.
 
 ### 2. Environment Bootstrap (Isolated Local Setup by Default)
 Clone the repository and run the setup pipeline:
