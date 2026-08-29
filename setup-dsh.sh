@@ -2,11 +2,11 @@
 set -euo pipefail
 
 # 1. Parse command line arguments for target configuration directory
-# Default: Local Workspace Mode ($(pwd)/.dsh)
+# Default: Local Workspace Mode ($PWD/.dsh)
 # Options:
 #   --global, -g       : Install configuration globally into ~/.dsh
 #   --dir, -d <path>   : Install configuration into a custom directory
-DSH_TARGET="${DSH_HOME:-$(pwd)/.dsh}"
+DSH_TARGET="${DSH_HOME:-$PWD/.dsh}"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -15,7 +15,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --dir|-d)
-            if [[ -n "${2:-}" ]]; then
+            if [[ -n "${2:-}" && ! "$2" =~ ^- ]]; then
                 DSH_TARGET="$2"
                 shift 2
             else
@@ -34,7 +34,8 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         *)
-            shift
+            echo "❌ Error: Unknown option '$1'. Use --help for usage."
+            exit 1
             ;;
     esac
 done
@@ -58,18 +59,18 @@ fi
 echo ""
 
 # 2. Enforce structural execution dependency check (Fail-Fast Gate)
-if ! command -v bun &> /dev/null; then
+if ! command -v bun > /dev/null 2>&1; then
     echo "❌ Execution Aborted: 'bun' binary runtime is missing from your system."
     echo "   Please install it first: curl -fsSL https://bun.sh | bash"
     exit 1
 fi
 echo "✅ Detected Bun runtime: $(bun --version)"
 
-if ! command -v pnpm &> /dev/null; then
+if ! command -v pnpm > /dev/null 2>&1; then
     echo "ℹ️  'pnpm' not found in PATH — ensuring pnpm is available via Bun..."
     bun add -g pnpm > /dev/null 2>&1 || true
 fi
-if command -v pnpm &> /dev/null; then
+if command -v pnpm > /dev/null 2>&1; then
     echo "✅ Detected pnpm runtime: $(pnpm --version)"
 fi
 echo ""
@@ -87,17 +88,19 @@ fi
 
 # 3b. Remote Gate: validate the key against OpenRouter before anything is written
 echo "🔑 Validating key against the OpenRouter API..."
-KEY_STATUS="$(OR_KEY="${OR_KEY}" bun -e '
-  try {
-    const r = await fetch("https://openrouter.ai/api/v1/auth/key", {
-      headers: { Authorization: `Bearer ${process.env.OR_KEY}` },
-      signal: AbortSignal.timeout(10000)
-    });
-    process.stdout.write(String(r.status));
-  } catch {
-    process.stdout.write("000");
-  }
-' 2>/dev/null)"
+KEY_STATUS="$(
+  OR_KEY="${OR_KEY}" bun -e '
+    try {
+      const r = await fetch("https://openrouter.ai/api/v1/auth/key", {
+        headers: { Authorization: `Bearer ${process.env.OR_KEY}` },
+        signal: AbortSignal.timeout(10000)
+      });
+      process.stdout.write(String(r.status));
+    } catch {
+      process.stdout.write("000");
+    }
+  ' 2>/dev/null
+)"
 KEY_STATUS="$(printf '%s' "${KEY_STATUS}" | tr -dc '0-9')"
 
 if [ "${KEY_STATUS}" != "200" ]; then
@@ -284,9 +287,22 @@ async function syncOpenRouterModels() {
     name: m.name || m.id
   }));
 
-  const dshDir = process.env.DSH_HOME 
-    ? path.resolve(process.env.DSH_HOME) 
-    : (fs.existsSync(path.join(process.cwd(), ".dsh")) ? path.join(process.cwd(), ".dsh") : path.join(os.homedir(), ".dsh"));
+  let dshDir;
+  if (process.env.DSH_HOME) {
+    let raw = process.env.DSH_HOME.trim();
+    if (raw.startsWith("~")) raw = path.join(os.homedir(), raw.slice(1));
+    dshDir = path.resolve(raw);
+  } else {
+    const localDir = path.join(process.cwd(), ".dsh");
+    const localPatch = fs.existsSync(path.join(localDir, "cordis.patch.yml"));
+    const globalDir = path.join(os.homedir(), ".dsh");
+    const globalPatch = fs.existsSync(path.join(globalDir, "cordis.patch.yml"));
+
+    if (localPatch) dshDir = localDir;
+    else if (globalPatch) dshDir = globalDir;
+    else if (fs.existsSync(localDir)) dshDir = localDir;
+    else dshDir = globalDir;
+  }
 
   const patchPath = path.join(dshDir, "cordis.patch.yml");
   if (!fs.existsSync(patchPath)) {
@@ -334,15 +350,16 @@ fi
 # 11. Programmatically bind scripts using 100% Bun Execution
 echo "📌 Writing runtime script bindings to your local package.json..."
 bun pm trust --all || true
-DSH_DIR="${DSH_DIR}" bun -e '
+bun -e '
   const fs = require("fs");
   const path = require("path");
   const p = JSON.parse(fs.readFileSync("package.json", "utf8"));
-  const isLocal = process.env.DSH_DIR !== path.join(process.env.HOME || "", ".dsh");
-  const prefix = isLocal ? "DSH_HOME=\"${DSH_HOME:-./.dsh}\" " : "";
+  const target = process.env.DSH_HOME || path.join(process.cwd(), ".dsh");
+  const isGlobal = target === path.join(process.env.HOME || "", ".dsh");
+  const prefix = isGlobal ? "" : `DSH_HOME="${target}" `;
   p.scripts = {
     ...p.scripts,
-    web: prefix + "dsh web",
+    web: prefix + "bun run bin/dsh-web.js",
     cli: prefix + "bun run bin/dsh-cli.js",
     headless: prefix + "dsh --profile headless",
     "sync-models": "bun run sync-models.js",

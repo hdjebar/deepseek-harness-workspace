@@ -13,10 +13,12 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Bash syntax check
-        run: bash -n setup-dsh.sh
+        run: |
+          bash -n setup-dsh.sh
+          bash -n reset.sh
 
       - name: ShellCheck
-        run: shellcheck --severity=style setup-dsh.sh
+        run: shellcheck --severity=style setup-dsh.sh reset.sh
 
       - name: Embedded sync tool matches sync-models.js
         run: |
@@ -57,6 +59,17 @@ jobs:
         run: |
           if HOME=/tmp/dsh-doctor-empty bun doctor.js; then
             echo "::error::doctor.js should exit non-zero when no credentials are present"
+            exit 1
+          fi
+
+      - name: doctor.js fails on insecure credential permissions (0644)
+        run: |
+          PERM_FIXTURE=/tmp/dsh-doctor-perm
+          mkdir -p "$PERM_FIXTURE/.dsh"
+          echo "refs: { OPENROUTER_API_KEY: 'sk-or-test' }" > "$PERM_FIXTURE/.dsh/.credentials.yaml"
+          chmod 644 "$PERM_FIXTURE/.dsh/.credentials.yaml"
+          if DSH_HOME="$PERM_FIXTURE/.dsh" bun doctor.js; then
+            echo "::error::doctor.js should fail when credentials have mode 0644"
             exit 1
           fi
 

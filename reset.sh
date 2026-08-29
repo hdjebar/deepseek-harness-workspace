@@ -42,7 +42,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Precedence: --dir → --global → DSH_HOME → local $(pwd)/.dsh
+# Precedence: --dir → --global → DSH_HOME → local $PWD/.dsh
 if [[ -n "$CUSTOM_DIR" ]]; then
     TARGET_DSH="$(mkdir -p "$CUSTOM_DIR" 2>/dev/null && cd "$CUSTOM_DIR" && pwd || echo "$CUSTOM_DIR")"
     IS_LOCAL_MODE=false
@@ -51,22 +51,22 @@ elif [ "$GLOBAL_RESET" = true ]; then
     IS_LOCAL_MODE=false
 elif [[ -n "${DSH_HOME:-}" ]]; then
     TARGET_DSH="$(cd "$DSH_HOME" 2>/dev/null && pwd || echo "$DSH_HOME")"
-    IS_LOCAL_MODE=$([ "$TARGET_DSH" = "$(pwd)/.dsh" ] && echo true || echo false)
+    IS_LOCAL_MODE=$([ "$TARGET_DSH" = "$PWD/.dsh" ] && echo true || echo false)
 else
-    TARGET_DSH="$(pwd)/.dsh"
+    TARGET_DSH="$PWD/.dsh"
     IS_LOCAL_MODE=true
 fi
 
 # Safety check against dangerous recursive targets
 REAL_TARGET="$(cd "$TARGET_DSH" 2>/dev/null && pwd || echo "$TARGET_DSH")"
-if [[ "$REAL_TARGET" == "/" || "$REAL_TARGET" == "$HOME" || "$REAL_TARGET" == "/tmp" || "$REAL_TARGET" == "$(pwd)" || "$REAL_TARGET" == "/var" || "$REAL_TARGET" == "/usr" || "$REAL_TARGET" == "/etc" ]]; then
+if [[ "$REAL_TARGET" == "/" || "$REAL_TARGET" == "$HOME" || "$REAL_TARGET" == "/tmp" || "$REAL_TARGET" == "$PWD" || "$REAL_TARGET" == "/var" || "$REAL_TARGET" == "/usr" || "$REAL_TARGET" == "/etc" ]]; then
     echo "❌ Safety Abort: Refusing to reset dangerous target directory '${REAL_TARGET}'."
     exit 1
 fi
 
 # If target directory doesn't exist in local mode and no local artifacts exist
 if [ "$IS_LOCAL_MODE" = true ] && [ ! -d "$TARGET_DSH" ] && [ ! -d "node_modules" ]; then
-    echo "ℹ️  No local DSH workspace configuration (./.dsh) or node_modules found in $(pwd)."
+    echo "ℹ️  No local DSH workspace configuration (./.dsh) or node_modules found in $PWD."
     echo "   Nothing to reset locally. (To reset global configuration, run: ./reset.sh --global)"
     exit 0
 fi
@@ -76,7 +76,7 @@ echo "    DEEPSEEK HARNESS (DSH) COMPLETE RESET & CLEAN SLATE                   
 echo "=========================================================================="
 echo ""
 echo "⚠️  WARNING: This will perform the following actions:"
-echo "   1. Gracefully terminate active DSH background processes and servers"
+echo "   1. Gracefully terminate active DSH background processes on port ${DSH_PORT:-${PORT:-3080}}"
 echo "   2. Wipe target configuration store (${REAL_TARGET})"
 if [ "$IS_LOCAL_MODE" = true ]; then
     echo "   3. Purge local workspace artifacts (node_modules, caches, logs)"
@@ -92,20 +92,29 @@ if [ "$FORCE" = false ]; then
 fi
 
 echo ""
-echo "🛑 [1/3] Terminating active DSH processes..."
-# Graceful termination (SIGTERM) followed by SIGKILL fallback
+echo "🛑 [1/3] Terminating active DSH processes on target port..."
 TARGET_PORT="${DSH_PORT:-${PORT:-3080}}"
-if lsof -ti ":${TARGET_PORT}" &>/dev/null; then
-    lsof -ti ":${TARGET_PORT}" 2>/dev/null | xargs kill -15 2>/dev/null || true
-    sleep 0.5
-    lsof -ti ":${TARGET_PORT}" 2>/dev/null | xargs kill -9 2>/dev/null || true
+if command -v lsof >/dev/null 2>&1; then
+    PIDS="$(lsof -ti ":${TARGET_PORT}" 2>/dev/null || true)"
+    if [ -n "$PIDS" ]; then
+        echo "$PIDS" | xargs kill -15 2>/dev/null || true
+        sleep 0.5
+        STILL_ALIVE="$(lsof -ti ":${TARGET_PORT}" 2>/dev/null || true)"
+        if [ -n "$STILL_ALIVE" ]; then
+            echo "$STILL_ALIVE" | xargs kill -9 2>/dev/null || true
+        fi
+    fi
 fi
-pkill -15 -f "bun.*dsh" 2>/dev/null || true
-pkill -15 -f "dsh-tui" 2>/dev/null || true
-sleep 0.2
-pkill -9 -f "bun.*dsh" 2>/dev/null || true
-pkill -9 -f "dsh-tui" 2>/dev/null || true
-echo "✅ Processes terminated."
+if [ -f "${REAL_TARGET}/dsh.pid" ]; then
+    PID="$(cat "${REAL_TARGET}/dsh.pid" 2>/dev/null || true)"
+    if [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null; then
+        kill -15 "$PID" 2>/dev/null || true
+        sleep 0.2
+        kill -9 "$PID" 2>/dev/null || true
+    fi
+    rm -f "${REAL_TARGET}/dsh.pid"
+fi
+echo "✅ Active processes on port ${TARGET_PORT} terminated."
 
 echo "🧹 [2/3] Removing configuration directory: ${REAL_TARGET}..."
 rm -rf "${REAL_TARGET}"
@@ -113,12 +122,10 @@ echo "✅ Configuration purged."
 
 if [ "$IS_LOCAL_MODE" = true ]; then
     echo "🗑️  [3/3] Cleaning local workspace artifacts (node_modules, caches, logs)..."
-    rm -rf node_modules .dsh *.log /tmp/dsh-*
+    rm -rf node_modules .dsh *.log
     echo "✅ Local workspace cleaned."
 else
-    echo "🗑️  [3/3] Cleaning temporary runtime locks (/tmp/dsh-*)..."
-    rm -rf /tmp/dsh-*
-    echo "✅ Temporary locks cleaned."
+    echo "🗑️  [3/3] Target configuration reset complete."
 fi
 
 echo ""

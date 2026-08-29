@@ -26,9 +26,22 @@ async function syncOpenRouterModels() {
     name: m.name || m.id
   }));
 
-  const dshDir = process.env.DSH_HOME 
-    ? path.resolve(process.env.DSH_HOME) 
-    : (fs.existsSync(path.join(process.cwd(), ".dsh")) ? path.join(process.cwd(), ".dsh") : path.join(os.homedir(), ".dsh"));
+  let dshDir;
+  if (process.env.DSH_HOME) {
+    let raw = process.env.DSH_HOME.trim();
+    if (raw.startsWith("~")) raw = path.join(os.homedir(), raw.slice(1));
+    dshDir = path.resolve(raw);
+  } else {
+    const localDir = path.join(process.cwd(), ".dsh");
+    const localPatch = fs.existsSync(path.join(localDir, "cordis.patch.yml"));
+    const globalDir = path.join(os.homedir(), ".dsh");
+    const globalPatch = fs.existsSync(path.join(globalDir, "cordis.patch.yml"));
+
+    if (localPatch) dshDir = localDir;
+    else if (globalPatch) dshDir = globalDir;
+    else if (fs.existsSync(localDir)) dshDir = localDir;
+    else dshDir = globalDir;
+  }
 
   const patchPath = path.join(dshDir, "cordis.patch.yml");
   if (!fs.existsSync(patchPath)) {

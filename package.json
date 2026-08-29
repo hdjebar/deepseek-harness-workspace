@@ -19,7 +19,7 @@
     "protobufjs"
   ],
   "scripts": {
-    "web": "DSH_HOME=\"${DSH_HOME:-./.dsh}\" dsh web",
+    "web": "DSH_HOME=\"${DSH_HOME:-./.dsh}\" bun run bin/dsh-web.js",
     "cli": "DSH_HOME=\"${DSH_HOME:-./.dsh}\" bun run bin/dsh-cli.js",
     "headless": "DSH_HOME=\"${DSH_HOME:-./.dsh}\" dsh --profile headless",
     "sync-models": "bun run sync-models.js",

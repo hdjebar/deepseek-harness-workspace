@@ -15,10 +15,20 @@ import path from "node:path";
 import os from "node:os";
 
 function resolveDshDir() {
-  if (process.env.DSH_HOME) return path.resolve(process.env.DSH_HOME);
+  if (process.env.DSH_HOME) {
+    let raw = process.env.DSH_HOME.trim();
+    if (raw.startsWith("~")) raw = path.join(os.homedir(), raw.slice(1));
+    return path.resolve(raw);
+  }
   const localDir = path.join(process.cwd(), ".dsh");
+  const localConfig = fs.existsSync(path.join(localDir, "cordis.patch.yml")) || fs.existsSync(path.join(localDir, ".credentials.yaml"));
+  const globalDir = path.join(os.homedir(), ".dsh");
+  const globalConfig = fs.existsSync(path.join(globalDir, "cordis.patch.yml")) || fs.existsSync(path.join(globalDir, ".credentials.yaml"));
+
+  if (localConfig) return localDir;
+  if (globalConfig) return globalDir;
   if (fs.existsSync(localDir)) return localDir;
-  return path.join(os.homedir(), ".dsh");
+  return globalDir;
 }
 
 const HOME_DSH = resolveDshDir();
@@ -58,7 +68,7 @@ function checkPermissions() {
   try {
     const dirStat = fs.statSync(HOME_DSH);
     const dirMode = dirStat.mode & 0o777;
-    if ((dirMode & 0o077) !== 0) {
+    if (process.platform !== "win32" && (dirMode & 0o077) !== 0) {
       warn("Folder permissions", `${DISPLAY_TARGET} is mode 0${dirMode.toString(8)} (recommend 0700)`);
     } else {
       pass("Folder permissions", `${DISPLAY_TARGET} mode 0${dirMode.toString(8)}`);
@@ -68,8 +78,8 @@ function checkPermissions() {
     if (fs.existsSync(credPath)) {
       const credStat = fs.statSync(credPath);
       const credMode = credStat.mode & 0o777;
-      if ((credMode & 0o077) !== 0) {
-        warn("Credential permissions", `${DISPLAY_TARGET}/.credentials.yaml is mode 0${credMode.toString(8)} (recommend 0600)`);
+      if (process.platform !== "win32" && (credMode & 0o077) !== 0) {
+        fail("Credential permissions", `${DISPLAY_TARGET}/.credentials.yaml is mode 0${credMode.toString(8)} (fatal: must be 0600) — run: chmod 600 ${credPath}`);
       } else {
         pass("Credential permissions", `${DISPLAY_TARGET}/.credentials.yaml mode 0${credMode.toString(8)}`);
       }
@@ -86,8 +96,8 @@ function resolveKey() {
 
   const credDoc = readIfExists(path.join(HOME_DSH, ".credentials.yaml"));
   if (credDoc) {
-    const m = credDoc.match(/^\s+OPENROUTER_API_KEY:\s*["']?([^\s"'\r\n]+)["']?\s*$/m);
-    if (m) return { key: m[1], source: `${DISPLAY_TARGET}/.credentials.yaml (managed store)` };
+    const mRefs = credDoc.match(/^\s*(?:refs\s*:\s*\n)?\s*OPENROUTER_API_KEY\s*:\s*["']?([^\s"'\r\n]+)["']?/m);
+    if (mRefs) return { key: mRefs[1], source: `${DISPLAY_TARGET}/.credentials.yaml (managed store)` };
   }
 
   const userEnv = readIfExists(path.join(HOME_DSH, ".env"));
