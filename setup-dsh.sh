@@ -190,8 +190,9 @@ async function syncOpenRouterModels() {
   }
 
   const modelsYaml = models.map(m => {
-    const safeName = m.name.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-    return `          - id: "${m.id}"\n            name: "${safeName}"`;
+    const safeId = String(m.id).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    const safeName = String(m.name).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    return `          - id: "${safeId}"\n            name: "${safeName}"`;
   }).join("\n");
 
   const openrouterBlock = `      openrouter:

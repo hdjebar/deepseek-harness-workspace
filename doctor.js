@@ -43,13 +43,13 @@ function resolveKey() {
 
   const credDoc = readIfExists(path.join(HOME_DSH, ".credentials.yaml"));
   if (credDoc) {
-    const m = credDoc.match(/^\s{2}OPENROUTER_API_KEY:\s*["']?([^\s"']+)["']?\s*$/m);
+    const m = credDoc.match(/^\s+OPENROUTER_API_KEY:\s*["']?([^\s"'\r\n]+)["']?\s*$/m);
     if (m) return { key: m[1], source: "~/.dsh/.credentials.yaml (managed store)" };
   }
 
   const userEnv = readIfExists(path.join(HOME_DSH, ".env"));
   if (userEnv) {
-    const m = userEnv.match(/^OPENROUTER_API_KEY=["']?([^\s"']+)["']?\s*$/m);
+    const m = userEnv.match(/^OPENROUTER_API_KEY\s*=\s*["']?([^\s"'\r\n]+)["']?\s*$/m);
     if (m) return { key: m[1], source: "~/.dsh/.env (user-env fallback)" };
   }
   return null;
@@ -96,7 +96,7 @@ function checkPatch() {
     fail("Runtime patch layer", "openrouter provider block missing — run ./setup-dsh.sh");
     return;
   }
-  const modelCount = (content.match(/^ {10}- id: "/gm) || []).length;
+  const modelCount = (content.match(/^\s+- id:\s*["'][^"']+["']/gm) || []).length;
   if (modelCount > 0) pass("Model catalog synced", `${modelCount} models in cordis.patch.yml`);
   else warn("Model catalog synced", "0 models — run: bun run sync-models");
 
@@ -158,9 +158,13 @@ async function checkPort() {
     const res = await fetch("http://127.0.0.1:3080", { signal: AbortSignal.timeout(1500) });
     info("Port 3080", `a web server is responding (HTTP ${res.status})`);
   } catch (err) {
-    const cause = String(err?.cause?.code ?? err.message ?? "");
-    if (cause.includes("ECONNREFUSED")) info("Port 3080", "free — nothing listening");
-    else warn("Port 3080", `probe failed: ${cause}`);
+    const cause = String(err?.cause?.code ?? err?.code ?? err?.message ?? "");
+    const lower = cause.toLowerCase();
+    if (lower.includes("econnrefused") || lower.includes("connectionrefused") || lower.includes("connection refused") || lower.includes("failed to connect")) {
+      info("Port 3080", "free — nothing listening");
+    } else {
+      warn("Port 3080", `probe failed: ${cause}`);
+    }
   }
 }
 
