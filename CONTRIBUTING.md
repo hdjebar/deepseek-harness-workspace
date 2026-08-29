@@ -41,11 +41,11 @@ Run what you can locally before pushing: `bash -n`, `shellcheck` if installed, a
 
 ## Changing `reset.sh` or `setup-dsh.sh`'s target-resolution logic — extra caution
 
-This is the highest-risk code in the repo. Its target/marker/precedence logic (`--dir` → `--global` → `$DSH_HOME` → `.dsh-target` marker → local `./.dsh`) has regressed more than once in this repo's history — most recently a shellcheck-motivated edit that silently broke recognition of a marker format and introduced a false-positive match, found only by manual review because nothing in CI exercises that logic directly (see [ChangeRequest/CR-001](ChangeRequest/CR-001-reset-test-suite.md)).
+This is the highest-risk code in the repo. Its target/marker/precedence logic (`--dir` → `--global` → `$DSH_HOME` → `.dsh-target` marker → local `./.dsh`) has regressed more than once in this repo's history — most recently a shellcheck-motivated edit that silently broke recognition of a marker format and introduced a false-positive match, found only by manual review because nothing in CI exercises that logic directly (see [issue #2](https://github.com/hdjebar/deepseek-harness-workspace/issues/2), "Test suite for reset.sh's marker/safety logic").
 
 If you're changing this logic:
-- Trace every branch by hand against the fixture table in CR-001 before pushing, not just the case you're fixing.
-- Prefer writing a [Change Request](#proposing-larger-changes-the-changerequest-folder) first if the change is non-trivial, so the resolution logic gets a second pair of eyes before it's live — `reset.sh` deletes things.
+- Trace every branch by hand against the fixture table in issue #2 before pushing, not just the case you're fixing.
+- Prefer opening a [change request issue](#proposing-larger-changes-as-github-issues) first if the change is non-trivial, so the resolution logic gets a second pair of eyes before it's live — `reset.sh` deletes things.
 - A "simplification" or "cleanup" of this logic is exactly the kind of change that has broken it before. Extra scrutiny, not less, for anything that looks obviously safe here.
 
 ---
@@ -59,14 +59,14 @@ If you're changing this logic:
 
 ---
 
-## Proposing larger changes: the `ChangeRequest/` folder
+## Proposing larger changes: as GitHub Issues
 
-[`ChangeRequest/`](ChangeRequest/README.md) tracks proposed-but-not-implemented work — a lightweight RFC. Use it for anything that:
+Proposed-but-not-implemented work is tracked as [GitHub Issues labeled `change-request`](https://github.com/hdjebar/deepseek-harness-workspace/issues?q=is%3Aissue+label%3Achange-request) — a lightweight RFC, one issue per proposal. Use one for anything that:
 - changes behavior of `reset.sh` or `setup-dsh.sh` beyond an obvious bug fix,
-- is speculative or needs a design decision before it's worth building (see CR-007, CR-008 for examples of appropriately-scoped-down speculative proposals), or
+- is speculative or needs a design decision before it's worth building (see [issue #8](https://github.com/hdjebar/deepseek-harness-workspace/issues/8), [issue #9](https://github.com/hdjebar/deepseek-harness-workspace/issues/9) for examples of appropriately-scoped-down speculative proposals, both labeled `bigger-swing`), or
 - you want feedback on before investing implementation time.
 
-Each CR is a `Summary` (one paragraph) + `Detail` (problem, proposed change, scope, and explicit **open questions** meant to be challenged) + a priority + a status (`🟡 Proposed` → `🔵 Under discussion` → `🟢 Accepted`/`⚪ Rejected` → `✅ Implemented`). Small, obviously-correct fixes (a typo, a stale path, a doc that doesn't match the code) don't need a CR — just fix them.
+Open one with the **Change request** issue template ([`.github/ISSUE_TEMPLATE/change_request.md`](.github/ISSUE_TEMPLATE/change_request.md)): a `Summary` (one paragraph) + `Detail` (problem, proposed change, scope, and explicit **open questions** meant to be challenged) + a priority label (`priority-high`/`priority-medium`/`priority-low`, plus `bigger-swing` if speculative). Small, obviously-correct fixes (a typo, a stale path, a doc that doesn't match the code) don't need one — just fix them.
 
 ---
 
