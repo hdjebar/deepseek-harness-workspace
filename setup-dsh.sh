@@ -6,7 +6,7 @@ set -euo pipefail
 # Options:
 #   --global, -g       : Install configuration globally into ~/.dsh
 #   --dir, -d <path>   : Install configuration into a custom directory
-USER_HOME="${HOME:-$PWD}"
+USER_HOME="${HOME:-$(cd ~ 2>/dev/null && pwd || echo "$PWD")}"
 DSH_TARGET="${DSH_HOME:-$PWD/.dsh}"
 
 while [[ $# -gt 0 ]]; do

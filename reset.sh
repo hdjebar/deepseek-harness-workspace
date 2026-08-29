@@ -4,7 +4,7 @@ set -euo pipefail
 FORCE=false
 GLOBAL_RESET=false
 CUSTOM_DIR=""
-USER_HOME="${HOME:-$PWD}"
+USER_HOME="${HOME:-$(cd ~ 2>/dev/null && pwd || echo "$PWD")}"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -53,7 +53,7 @@ if [ -f "$TARGET_MARKER" ]; then
 fi
 
 IS_GLOBAL_MARKER=false
-if [ "$RAW_MARKER" = "global" ] || [ "$RAW_MARKER" = "${USER_HOME}/.dsh" ] || [[ "$RAW_MARKER" == *"/.dsh" && "$RAW_MARKER" == *"$USER_HOME/.dsh" ]]; then
+if [ "$RAW_MARKER" = "global" ] || [ "$RAW_MARKER" = "~/.dsh" ] || [ "$RAW_MARKER" = "${USER_HOME}/.dsh" ]; then
     IS_GLOBAL_MARKER=true
 fi
 
