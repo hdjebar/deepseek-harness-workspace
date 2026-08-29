@@ -57,7 +57,7 @@ Everything it configures is plain YAML/JSON on your own disk (`cordis.patch.yml`
 ## 🎯 Who It's For
 
 * **Solo developers & indie hackers** who want one workbench across many models instead of separate accounts, keys, and billing per provider.
-* **Builders who want to own their setup** — inspectable config, a local credential vault, and a `./skills/` folder that becomes a personal knowledge base over time (see the [Customization Guide](docs/customization.md)).
+* **Builders who want to own their setup** — inspectable config, a local credential vault, and a `./.agents/skills/` folder that becomes a personal knowledge base over time (see the [Customization Guide](docs/customization.md)).
 * **Anyone automating with headless pipelines** — CI/CD tasks, background codebase audits, or scripted multi-step jobs via `bun run headless`.
 * **People who may eventually want local/on-prem inference** — the `llm-pi-ai` provider layer makes swapping in Ollama, LM Studio, or vLLM a config change, not a rewrite (see the "Going Local" section of the [Customization Guide](docs/customization.md)).
 
@@ -206,7 +206,7 @@ This workspace is designed to be fully customizable via conversational prompts, 
 
 * 🛒 **Community Plugins:** Install visual tools, sidebars, and models with 1-click via **`dshmarket`** in the Web UI.
 * 🔍 **Natural-Language Discovery:** Ask your agent in chat (*"Find a plugin for Docker / PostgreSQL"*) via **`dsh-find-plugin`**.
-* 🧠 **Custom Skills:** Add domain rules anytime by placing Markdown files in `./skills/<skill-name>/SKILL.md`.
+* 🧠 **Custom Skills:** Add domain rules anytime by placing Markdown files in `./.agents/skills/<skill-name>/SKILL.md` (versioned with the project) or `<DSH_HOME>/skills/<skill-name>/SKILL.md` (portable across projects — see [docs/personas.md](docs/personas.md)).
 * 📖 **Learn More:** Check out the [**Customization Guide**](docs/customization.md) for practical prompt recipes.
 
 ---

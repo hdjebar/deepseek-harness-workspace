@@ -8,7 +8,7 @@
 
 | A persona needs... | DSH mechanism | Where it lives |
 | :--- | :--- | :--- |
-| Its repeatable processes/procedures written down | **Skills** | `./skills/<name>/SKILL.md` |
+| Its repeatable processes/procedures written down | **Skills** | `./.agents/skills/<name>/SKILL.md` (versioned with a project) or `<DSH_HOME>/skills/<name>/SKILL.md` (portable — see below) |
 | The specific tools it touches day to day | **Plugins + MCP servers** | `dshmarket`/`dsh-find-plugin`; `cordis.patch.yml`'s `mcp-panel.config.servers` |
 | The right cost/quality tradeoff for its work | **Model routing** | `agent-default-model` in `cordis.patch.yml` (see the [Customization Guide](customization.md), §4) |
 | Repeatable, scripted automation | **Headless recipes** | `bun run headless "..."` |
@@ -37,9 +37,44 @@ Assembling the pieces below is currently manual — write the skill file, add th
 
 ---
 
+## ↔️ The inverted mechanism: one project, many contexts
+
+Everything in [docs/reset.md](reset.md) and this guide's "Who It's For" framing describes **many projects sharing one context** — local (one project, one context), global (many projects, one shared context), `--dir` (same, at a custom path). The inverse also works, and it's the actual mechanism that makes a persona portable: **the same project, run against a different context per invocation**, with nothing written to disk to make it "stick."
+
+### Why this works
+`bin/dsh-web.js`, `bin/dsh-cli.js`, and `bin/dsh-headless.js` — the actual runtime commands, not just `setup-dsh.sh`/`reset.sh` — all resolve their target via `resolveDshDir()` (`bin/resolve-dsh.js`), which checks `process.env.DSH_HOME` first, above the project's own `.dsh-target` marker or local `./.dsh`. So a `DSH_HOME` set only for one command call temporarily borrows a different context, without touching this project's own configuration or marker file:
+
+```bash
+# Run this project against the data-analyst context
+DSH_HOME=~/contexts/data-analyst bun run headless "..."
+
+# Run the exact same project, same directory, against a different context
+DSH_HOME=~/contexts/legal-reviewer bun run headless "..."
+```
+
+Because `<DSH_HOME>/skills/<name>/SKILL.md` is itself one of the ranked skill-discovery roots (see the [Customization Guide](customization.md), §3), a persona's skills travel along with its context automatically if you store them there — you don't need the skill file to already exist in whatever project you're running from.
+
+### Running contexts in parallel
+Combine with `DSH_PORT` (see the [Customization Guide](customization.md), §7) to run the same project against two different contexts at once, in two terminals, without a port collision:
+
+```bash
+# Terminal 1 — data-analyst context on the default port
+DSH_HOME=~/contexts/data-analyst bun run web
+
+# Terminal 2 — legal-reviewer context on a separate port
+DSH_HOME=~/contexts/legal-reviewer DSH_PORT=3081 bun run web
+```
+
+### What this isn't
+There's no `dsh --context <name>` switch — this is an emergent property of `DSH_HOME` being a plain per-invocation environment variable, not a named feature with its own flag. And each running process is still bound to exactly one context for its lifetime: "many contexts" here means many separate invocations, sequential or parallel — not several contexts held open simultaneously within one session.
+
+---
+
 ## Worked example: a "Data Analyst" persona
 
-### 1. The skill (`./skills/data-analyst/SKILL.md`)
+This builds the persona as a **portable context** (`~/contexts/data-analyst/`) rather than editing any one project's local `.dsh` — that's what lets you run it against whichever project you're in via `DSH_HOME`, per the mechanism above. If you'd rather keep a persona tied to one project instead, use `./.agents/skills/` and that project's own `cordis.patch.yml` — same content, different location.
+
+### 1. The skill (`~/contexts/data-analyst/skills/data-analyst/SKILL.md`)
 
 ```markdown
 ---
@@ -59,12 +94,9 @@ description: Use when querying, cleaning, or summarizing tabular/SQL data for th
 - "Show monthly active users for Q1" → aggregate query + a one-paragraph summary, not a raw table dump.
 ```
 
-(Template reused from the [Customization Guide](customization.md), §3, "Creating & Teaching Domain Skills via Prompts".)
+(Template reused from the [Customization Guide](customization.md), §3, "Creating & Teaching Domain Skills via Prompts". `<DSH_HOME>/skills/...` is discovery rank 400 — it's picked up automatically once `DSH_HOME=~/contexts/data-analyst` is set for a run, no per-project setup needed.)
 
-### 2. Its tools (`cordis.patch.yml`, MCP block)
-
-> [!NOTE]
-> This lives at `./.dsh/cordis.patch.yml` by default (local mode — DSH's default, per the [Quick Start](../README.md#-quick-start-in-60-seconds)) or `~/.dsh/cordis.patch.yml` if the workspace was installed with `./setup-dsh.sh --global`. The examples below use the local, default path.
+### 2. Its tools (`~/contexts/data-analyst/cordis.patch.yml`, MCP block)
 
 ```yaml
 - id: mcp-panel
@@ -88,22 +120,26 @@ description: Use when querying, cleaning, or summarizing tabular/SQL data for th
 
 Swap to a stronger model only for tasks that need it (e.g. reconciling ambiguous schema questions) — per-task override, not a change to the persona's default. See the [Customization Guide](customization.md), §4, "Model Selection & Temperature Tuning".
 
-### 4. Its automation (a headless recipe)
+### 4. Its automation (a headless recipe, run from any project)
 
 ```bash
-bun run headless "Using the data-analyst skill, connect to ./data.db via the sqlite-db MCP tool, compute monthly active users for the last 2 quarters, and write a 1-paragraph summary to reports/mau.md"
+DSH_HOME=~/contexts/data-analyst bun run headless "Using the data-analyst skill, connect to ./data.db via the sqlite-db MCP tool, compute monthly active users for the last 2 quarters, and write a 1-paragraph summary to reports/mau.md"
 ```
 
-Save recipes like this as shell aliases, a `Makefile`, or a small script in the consuming project — DSH doesn't need to know about them, it just needs the skill/plugin/model state above to already be in place when the recipe runs.
+Save recipes like this as shell aliases, a `Makefile`, or a small script — the `DSH_HOME=` prefix is what makes the recipe carry its own context wherever it's run, rather than depending on whatever `.dsh` happens to be local to the current project.
+
+> [!NOTE]
+> For a real persona context, run `./setup-dsh.sh --dir ~/contexts/data-analyst` once first — that's what gets you a validated OpenRouter key, installed plugins, and a generated `cordis.patch.yml` at that path. `setup-dsh.sh` doesn't create a `skills/` subfolder or know anything about MCP servers scoped to one persona, though — those two pieces (steps 1 and 2 above) you add yourself, on top of what it generates.
 
 ---
 
 ## Applying this to your own persona
 
-1. Write the skill first — it's the only piece that's pure content, no config syntax to get wrong.
-2. List the tools that persona *actually* uses regularly — resist adding every available plugin/MCP server "just in case"; a smaller, curated list is easier for the agent to reason about and for you to audit.
-3. Pick a default model appropriate to the persona's typical task cost/complexity, not the most capable model by default.
-4. Write down (don't just remember) the headless recipes for its recurring jobs.
+1. Decide where it lives first: `./.agents/skills/` + this project's `cordis.patch.yml` for a persona tied to one project, or a dedicated `<DSH_HOME>/skills/` + `cordis.patch.yml` context folder (bootstrapped via `setup-dsh.sh --dir`) for one that should follow you across projects.
+2. Write the skill — it's the only piece that's pure content, no config syntax to get wrong.
+3. List the tools that persona *actually* uses regularly — resist adding every available plugin/MCP server "just in case"; a smaller, curated list is easier for the agent to reason about and for you to audit.
+4. Pick a default model appropriate to the persona's typical task cost/complexity, not the most capable model by default.
+5. Write down (don't just remember) the headless recipes for its recurring jobs — prefix with `DSH_HOME=<context>` if it's meant to be portable.
 
 ---
 

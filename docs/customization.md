@@ -10,7 +10,7 @@ This guide explains how to customize, extend, and tailor your **DeepSeek Harness
 flowchart TD
     PROMPT["💬 User Prompt\n(Web IDE / TUI / Headless)"] --> ACTION1["🔌 1. Discover & Install Plugins\n(via dsh-find-plugin)"]
     PROMPT --> ACTION2["🔌 2. Add MCP Tool Servers\n(via dsh-mcp-panel)"]
-    PROMPT --> ACTION3["🧠 3. Create Custom Domain Skills\n(in ./skills/<name>/SKILL.md)"]
+    PROMPT --> ACTION3["🧠 3. Create Custom Domain Skills\n(in ./.agents/skills/<name>/SKILL.md)"]
     PROMPT --> ACTION4["⚙️ 4. Tune Models & Samplers\n(via OpenRouter & Model Pro)"]
     PROMPT --> ACTION5["🛡️ 5. Adjust Sandbox Policies\n(workspace-write vs read-only)"]
     PROMPT --> ACTION6["🏠 6. Swap in an On-Prem Provider\n(Ollama / LM Studio / vLLM via llm-pi-ai)"]
@@ -61,12 +61,20 @@ Through **`dsh-mcp-panel`**, you can prompt the agent to configure and register 
 
 ## 3. 🧠 Creating & Teaching Domain Skills via Prompts
 
-Skills in DSH are modular Markdown documents located in `./skills/<skill-name>/SKILL.md`. You can ask the agent to create new specialized skills on the fly:
+Skills in DSH are modular Markdown documents, discovered by `@deepseek-ai/dsh-skill-filesystem` from a ranked set of roots — **not** a bare `./skills/` at the project root, despite what older versions of these docs said. Verified against the exact package version this repo pins (`0.1.1-rc.2` in `bun.lock`):
+
+| Root | Path | Tracked by this repo's `.gitignore`? | Travels with `DSH_HOME`? |
+| :--- | :--- | :--- | :--- |
+| Project (`.dsh`) | `<project root>/.dsh/skills/<name>/SKILL.md` | ❌ No — `.dsh/` is ignored | No, tied to this project |
+| Project (`.agents`) | `<project root>/.agents/skills/<name>/SKILL.md` | ✅ Yes | No, tied to this project |
+| User/context | `<DSH_HOME>/skills/<name>/SKILL.md` | Depends where `DSH_HOME` points | **Yes** — see [Personas](personas.md) |
+
+**For a skill you want committed to the project's git history**, use `./.agents/skills/<name>/SKILL.md` — the `.dsh` root technically works too (it's discovery rank 100, the highest priority) but sits inside a directory this repo's own `.gitignore` excludes wholesale, so anything placed there won't be versioned unless you specifically carve out an exception for it.
 
 ### Example Prompts:
-> 💬 *"Create a new skill in `./skills/nextjs-best-practices/SKILL.md` with rules for App Router, server components, and SEO optimization."*  
-> 💬 *"Document our team's GraphQL schema conventions into `./skills/graphql-standards/SKILL.md`."*  
-> 💬 *"Generate a security review skill in `./skills/smart-contract-audit/SKILL.md` with common Solidity vulnerability checklists."*
+> 💬 *"Create a new skill in `./.agents/skills/nextjs-best-practices/SKILL.md` with rules for App Router, server components, and SEO optimization."*  
+> 💬 *"Document our team's GraphQL schema conventions into `./.agents/skills/graphql-standards/SKILL.md`."*  
+> 💬 *"Generate a security review skill in `./.agents/skills/smart-contract-audit/SKILL.md` with common Solidity vulnerability checklists."*
 
 ### Skill Structure Template:
 ```markdown
@@ -206,7 +214,8 @@ Because **everything is a plugin**, the model provider isn't hardcoded — it's 
 | :--- | :--- | :--- |
 | **Add Plugins** | Prompt agent or use GUI Store | `dshmarket` in Web UI / `dsh-find-plugin` |
 | **Add MCP Servers** | Prompt agent or edit YAML | `dsh-mcp-panel` / `./.dsh/cordis.patch.yml` |
-| **Add Skills** | Prompt agent to write Markdown | `./skills/<name>/SKILL.md` |
+| **Add Skills (versioned)** | Prompt agent to write Markdown | `./.agents/skills/<name>/SKILL.md` |
+| **Add Skills (portable across projects)** | Prompt agent to write Markdown | `<DSH_HOME>/skills/<name>/SKILL.md` |
 | **Go Local (On-Prem AI)** | Register an OpenAI-compatible local server as a provider | `llm-pi-ai.config.providers` in `./.dsh/cordis.patch.yml` |
 | **Custom Port** | Set environment variable | `DSH_PORT=3081 bun run web` |
 | **Sync Models** | Run sync command | `bun run sync-models` |

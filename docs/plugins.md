@@ -44,7 +44,7 @@ bunx @deepseek-ai/dsh plugin --profile headless add <plugin-name>
 | **Model Pro Configurator** | ✅ Visual UI in Settings | ❌ (YAML Config) | ❌ (YAML Config) |
 | **Natural Language Discovery (`dsh-find-plugin`)** | ✅ Available to Agent | ✅ Available in Session | ✅ Available to Headless Agent |
 | **Free Search Engine (`@liustack/modsearch`)** | ✅ Enabled | ✅ Enabled | ✅ Enabled |
-| **Workspace Skills (`./skills/`)** | ✅ **Global** | ✅ **Global** | ✅ **Global** |
+| **Workspace Skills (`./.agents/skills/` or `<DSH_HOME>/skills/`)** | ✅ **Global** | ✅ **Global** | ✅ **Global** |
 | **OpenRouter 390+ Model Catalog** | ✅ **Global** | ✅ **Global** | ✅ **Global** |
 | **POSIX 0600 Credential Isolation** | ✅ **Global** | ✅ **Global** | ✅ **Global** |
 
