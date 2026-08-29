@@ -42,7 +42,7 @@ Through **`dsh-mcp-panel`**, you can prompt the agent to configure and register 
 > 💬 *"Configure the GitHub MCP server so you can inspect PRs and issues."*  
 > 💬 *"Connect a Chrome DevTools MCP server for automated browser testing."*
 
-### Manual Configuration Shortcut (`~/.dsh/cordis.patch.yml`):
+### Manual Configuration Shortcut (`cordis.patch.yml` — `./.dsh/cordis.patch.yml` by default, or `~/.dsh/cordis.patch.yml` with `--global`):
 ```yaml
 - id: mcp-panel
   config:
@@ -162,7 +162,7 @@ Because **everything is a plugin**, the model provider isn't hardcoded — it's 
 > 💬 *"Add a local Ollama provider pointing to `http://localhost:11434/v1` serving `llama3.1`, and switch the default model to it."*  
 > 💬 *"Register my LM Studio server as a provider and let me pick between it and OpenRouter from Model Pro."*
 
-### Manual Configuration (`~/.dsh/cordis.patch.yml`):
+### Manual Configuration (`cordis.patch.yml` — `./.dsh/cordis.patch.yml` by default, or `~/.dsh/cordis.patch.yml` with `--global`):
 ```yaml
 - id: llm-pi-ai
   config:

@@ -6,7 +6,7 @@ Standard AI agent harnesses often rely on expensive search APIs (Tavily, Bing, G
 * 🆓 **Zero API Keys & Zero Cost:** Queries the web without requiring any subscription or credit card.
 * 🌐 **Multi-Engine Aggregator:** Automatically queries and falls back between DuckDuckGo, Bing, and open web indexers.
 * 🕷️ **Clean Web Scraping:** Uses Firecrawl-compatible web extraction to deliver sanitized, readable Markdown directly into the agent's reasoning loop.
-* ⚡ **Zero-Code Override:** Pre-configured in `~/.dsh/cordis.patch.yml` to automatically intercept and replace default paid search providers:
+* ⚡ **Zero-Code Override:** Pre-configured in `cordis.patch.yml` (`./.dsh/cordis.patch.yml` by default, or `~/.dsh/cordis.patch.yml` with `--global`) to automatically intercept and replace default paid search providers:
 
 ```yaml
 # Disable default paid search in favor of free ModSearch

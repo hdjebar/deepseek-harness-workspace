@@ -2,10 +2,10 @@
 
 ```mermaid
 flowchart TD
-    subgraph Storage ["🔒 Isolated User Home (~/.dsh)"]
-        CRED["~/.dsh/.credentials.yaml\n(POSIX 0600 Managed Store)"]
-        PATCH["~/.dsh/cordis.patch.yml\n(Provider & Plugin Orchestration)"]
-        SETT["~/.dsh/settings.yaml\n(Default Model & Provider Routes)"]
+    subgraph Storage ["🔒 Isolated Config Store (.dsh)"]
+        CRED[".dsh/.credentials.yaml\n(POSIX 0600 Managed Store)"]
+        PATCH[".dsh/cordis.patch.yml\n(Provider & Plugin Orchestration)"]
+        SETT[".dsh/settings.yaml\n(Default Model & Provider Routes)"]
     end
 
     subgraph Interfaces ["💻 Dual Client Environments"]
@@ -32,6 +32,8 @@ flowchart TD
     CORE -->|Streaming & Tool Calls| OR
     MODSEARCH -->|Scraping & Queries| WEB_NET
 ```
+
+`.dsh/` resolves to `./.dsh` inside the current workspace by default (local mode — DSH's default) or `~/.dsh` if installed with `./setup-dsh.sh --global`.
 
 ---
 

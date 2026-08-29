@@ -208,18 +208,22 @@ This workspace is designed to be fully customizable via conversational prompts, 
 
 Run `bun run doctor` anytime for an instant, non-destructive health analysis of your environment:
 
+This example is from a **local-mode** install (`./.dsh`, the default) — a `--global` install would show `~/.dsh` in the same fields instead:
+
 ```
 🩺 DSH workspace doctor — read-only diagnostics
 
 ✅ Bun runtime — bun 1.3.14
 ✅ Framework installed — @deepseek-ai/dsh 0.1.1-rc.2
 ✅ Script bindings — web, cli, headless, sync-models, doctor
-✅ OpenRouter key valid — source: ~/.dsh/.credentials.yaml (managed store); limit: no spending limit
-✅ Runtime patch layer — /Users/user/.dsh/cordis.patch.yml
-✅ Model catalog synced — 396 models in cordis.patch.yml
+✅ Folder permissions — ./.dsh (local workspace) mode 0700
+✅ Credential permissions — ./.dsh (local workspace)/.credentials.yaml mode 0600
+✅ OpenRouter key valid — source: ./.dsh (local workspace)/.credentials.yaml (managed store); limit: no spending limit
+✅ Model catalog synced — 396 models in ./.dsh (local workspace)/cordis.patch.yml
 ✅ Sync anchor present
-✅ Settings layer — ~/.dsh/settings.yaml routes openrouter
-✅ Web profile plugins — 5/5 installed
+✅ Settings layer — ./.dsh (local workspace)/settings.yaml routes openrouter
+✅ Web profile plugins — 6/6 installed
+✅ Headless profile plugins — 2/2 installed
 ℹ️  Port 3080 — free — nothing listening
 
 ✅ All critical checks passed.

@@ -8,9 +8,11 @@ This workspace comes pre-provisioned with both graphical and natural-language pl
 flowchart LR
     AGENT["🤖 DSH Agent / User"] --> GUI["🛒 dshmarket\n(Visual Store in Web IDE)"]
     AGENT --> NLP["🔍 dsh-find-plugin\n(Natural Language GitHub & npm Discovery)"]
-    GUI --> INSTALLED["📦 ~/.dsh/profiles/web/node_modules\n(Skills, Tools, Themes & MCPs)"]
+    GUI --> INSTALLED["📦 .dsh/profiles/web/node_modules\n(Skills, Tools, Themes & MCPs)"]
     NLP --> INSTALLED
 ```
+
+`.dsh/` is `./.dsh` by default (local mode) or `~/.dsh` with `./setup-dsh.sh --global` — see [docs/architecture.md](architecture.md).
 
 ### 1. Visual Marketplace (`dshmarket`)
 * Integrated directly into the Web Workbench UI (`http://127.0.0.1:3080`).

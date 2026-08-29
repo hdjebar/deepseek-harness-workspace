@@ -2,7 +2,7 @@
 
 > [!IMPORTANT]
 > **Strict POSIX Credential Isolation**  
-> Credentials reside in `~/.dsh/.credentials.yaml` with strict `0600` permissions (readable/writable only by the owner) inside a `0700` directory. Legacy plaintext `.env` copies are automatically expunged on bootstrap.
+> Credentials reside in `.credentials.yaml` — `./.dsh/.credentials.yaml` by default (local mode), or `~/.dsh/.credentials.yaml` if installed with `./setup-dsh.sh --global` — with strict `0600` permissions (readable/writable only by the owner) inside a `0700` directory. Legacy plaintext `.env` copies are automatically expunged on bootstrap.
 
 > [!NOTE]
 > **Runtime Filesystem Sandboxing**  

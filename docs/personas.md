@@ -29,7 +29,7 @@ A persona, concretely, is: **a skill set + a plugin/MCP list + a model choice + 
 
 ### One thing this still isn't (verified)
 
-**Not (verifiably) a theming system.** The only evidence of installable visual themes is a generic label in the [architecture diagram](architecture.md) (`~/.dsh/profiles/web/node_modules` holding "Skills, Tools, Themes & MCPs") and `dsh-better-sidebar`'s `layout: vscode-classic` config. Unlike the workflow tool above, this one hasn't been checked against the actual published packages — treat it as unverified rather than confirmed absent, and check what `dshmarket` actually offers before relying on it.
+**Not (verifiably) a theming system.** The only evidence of installable visual themes is a generic label in the [plugins diagram](plugins.md) (`.dsh/profiles/web/node_modules` holding "Skills, Tools, Themes & MCPs") and `dsh-better-sidebar`'s `layout: vscode-classic` config. Unlike the workflow tool above, this one hasn't been checked against the actual published packages — treat it as unverified rather than confirmed absent, and check what `dshmarket` actually offers before relying on it.
 
 ### No one-step "apply a persona" command today
 
@@ -61,7 +61,10 @@ description: Use when querying, cleaning, or summarizing tabular/SQL data for th
 
 (Template reused from the [Customization Guide](customization.md), §3, "Creating & Teaching Domain Skills via Prompts".)
 
-### 2. Its tools (`~/.dsh/cordis.patch.yml`, MCP block)
+### 2. Its tools (`cordis.patch.yml`, MCP block)
+
+> [!NOTE]
+> This lives at `./.dsh/cordis.patch.yml` by default (local mode — DSH's default, per the [Quick Start](../README.md#-quick-start-in-60-seconds)) or `~/.dsh/cordis.patch.yml` if the workspace was installed with `./setup-dsh.sh --global`. The examples below use the local, default path.
 
 ```yaml
 - id: mcp-panel
@@ -74,7 +77,7 @@ description: Use when querying, cleaning, or summarizing tabular/SQL data for th
 
 (Same MCP mechanism as the [Customization Guide](customization.md), §2, "Connecting Model Context Protocol (MCP) Servers" — just scoped to the tool this persona actually needs, not every MCP server available.)
 
-### 3. Its model choice (`~/.dsh/cordis.patch.yml`)
+### 3. Its model choice (same `cordis.patch.yml`)
 
 ```yaml
 - id: agent-default-model
