@@ -65,14 +65,28 @@ flowchart LR
 * The agent queries GitHub topics and npm registries dynamically, presenting installable plugin recommendations.
 
 ### 3. CLI Plugin Management
-You can also add or remove plugins directly from your terminal:
+You can also add or remove plugins directly from your terminal per profile:
 ```bash
 # Add a plugin to the web profile
 bunx @deepseek-ai/dsh plugin --profile web add <plugin-name>
 
-# Example: Add custom community tools or skills
-bunx @deepseek-ai/dsh plugin --profile web add dsh-plugin-docker
+# Add a tool plugin to the headless profile
+bunx @deepseek-ai/dsh plugin --profile headless add <plugin-name>
 ```
+
+### 4. Profile Capability Matrix
+
+| Capability | 🌐 `bun run web`<br>*(Web Workbench)* | ⌨️ `bun run cli`<br>*(Terminal TUI)* | 🤖 `bun run headless`<br>*(Background Agent)* |
+| :--- | :---: | :---: | :---: |
+| **Visual Plugin Store (`dshmarket`)** | ✅ Web UI Store | ❌ | ❌ |
+| **Visual VSCode Layout (`dsh-better-sidebar`)** | ✅ Browser Workbench | ❌ (Vim-style TUI) | ❌ |
+| **Visual MCP Cockpit (`dsh-mcp-panel`)** | ✅ Dedicated Settings UI | ❌ (YAML Config) | ❌ (YAML Config) |
+| **Model Pro Configurator** | ✅ Visual UI in Settings | ❌ (YAML Config) | ❌ (YAML Config) |
+| **Natural Language Discovery (`dsh-find-plugin`)** | ✅ Available to Agent | ✅ Available in Session | ✅ Available to Headless Agent |
+| **Free Search Engine (`@liustack/modsearch`)** | ✅ Enabled | ✅ Enabled | ✅ Enabled |
+| **Workspace Skills (`./skills/`)** | ✅ **Global** | ✅ **Global** | ✅ **Global** |
+| **OpenRouter 390+ Model Catalog** | ✅ **Global** | ✅ **Global** | ✅ **Global** |
+| **POSIX 0600 Credential Isolation** | ✅ **Global** | ✅ **Global** | ✅ **Global** |
 
 ---
 

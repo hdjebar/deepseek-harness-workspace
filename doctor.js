@@ -16,10 +16,15 @@ import os from "node:os";
 
 const HOME_DSH = path.join(os.homedir(), ".dsh");
 const PLUGIN_DIR = path.join(HOME_DSH, "profiles", "web", "node_modules");
+const HEADLESS_PLUGIN_DIR = path.join(HOME_DSH, "profiles", "headless", "node_modules");
 const EXPECTED_PLUGINS = [
   "dshmarket",
   "dsh-mcp-panel",
   "dsh-better-sidebar",
+  "dsh-find-plugin",
+  "@liustack/modsearch",
+];
+const EXPECTED_HEADLESS_PLUGINS = [
   "dsh-find-plugin",
   "@liustack/modsearch",
 ];
@@ -141,16 +146,25 @@ function checkWorkspace() {
 }
 
 function checkPlugins() {
-  try { fs.readdirSync(PLUGIN_DIR); } catch {
+  try {
+    fs.readdirSync(PLUGIN_DIR);
+    const missing = EXPECTED_PLUGINS.filter((p) => !fs.existsSync(path.join(PLUGIN_DIR, p)));
+    const present = EXPECTED_PLUGINS.length - missing.length;
+    if (missing.length === 0) pass("Web profile plugins", `${present}/${EXPECTED_PLUGINS.length} installed`);
+    else warn("Web profile plugins", `missing: ${missing.join(", ")} — re-run ./setup-dsh.sh`);
+  } catch {
     info("Web profile plugins", "no web profile provisioned yet — run ./setup-dsh.sh");
-    return;
   }
-  // existsSync follows symlinks (pnpm-style installs), so this covers both
-  // real directories and linked packages, scoped or not.
-  const missing = EXPECTED_PLUGINS.filter((p) => !fs.existsSync(path.join(PLUGIN_DIR, p)));
-  const present = EXPECTED_PLUGINS.length - missing.length;
-  if (missing.length === 0) pass("Web profile plugins", `${present}/${EXPECTED_PLUGINS.length} installed`);
-  else warn("Web profile plugins", `missing: ${missing.join(", ")} — re-run ./setup-dsh.sh`);
+
+  try {
+    fs.readdirSync(HEADLESS_PLUGIN_DIR);
+    const missing = EXPECTED_HEADLESS_PLUGINS.filter((p) => !fs.existsSync(path.join(HEADLESS_PLUGIN_DIR, p)));
+    const present = EXPECTED_HEADLESS_PLUGINS.length - missing.length;
+    if (missing.length === 0) pass("Headless profile plugins", `${present}/${EXPECTED_HEADLESS_PLUGINS.length} installed`);
+    else warn("Headless profile plugins", `missing: ${missing.join(", ")} — re-run ./setup-dsh.sh`);
+  } catch {
+    info("Headless profile plugins", "no headless profile provisioned yet — run ./setup-dsh.sh");
+  }
 }
 
 async function checkPort() {

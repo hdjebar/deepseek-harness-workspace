@@ -119,7 +119,7 @@ cat << 'EOF' > "$HOME/.dsh/cordis.patch.yml"
     enable_git_diff: true
 EOF
 
-# 8. Explicitly resolve and link verified public ecosystem modules into the runtime profile
+# 8. Explicitly resolve and link verified public ecosystem modules into the runtime profiles
 echo "🔐 Deploying and linking external multi-profile plugin segments..."
 mkdir -p "$HOME/.dsh/profiles/web"
 cat << 'EOF' > "$HOME/.dsh/profiles/web/pnpm-workspace.yaml"
@@ -137,6 +137,21 @@ allowBuilds:
 EOF
 # dsh-provider-model-configurator is pinned to upstream commit 70f8811 — bump deliberately.
 bunx @deepseek-ai/dsh plugin --profile web add dshmarket dsh-mcp-panel dsh-better-sidebar dsh-find-plugin @liustack/modsearch github:LiangYin233/dsh-provider-model-configurator#70f88112c7d92fadeb93e46f5dcb8b1f3ae6eba3
+
+mkdir -p "$HOME/.dsh/profiles/headless"
+cat << 'EOF' > "$HOME/.dsh/profiles/headless/pnpm-workspace.yaml"
+packages:
+  - .
+
+nodeLinker: hoisted
+autoInstallPeers: false
+allowBuilds:
+  "@deepseek-ai/dsh-subprocess-local": true
+  koffi: true
+  protobufjs: true
+  "@google/genai": true
+EOF
+bunx @deepseek-ai/dsh plugin --profile headless add dsh-find-plugin @liustack/modsearch
 
 # 9. Store OpenRouter API credentials in the managed credential store and configure ~/.dsh/settings.yaml
 echo "🗝️ Injecting token into the managed store ~/.dsh/.credentials.yaml and configuring ~/.dsh/settings.yaml..."
