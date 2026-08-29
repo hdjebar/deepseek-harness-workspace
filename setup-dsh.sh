@@ -28,7 +28,7 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Options:"
             echo "  (default)          Install configuration locally into ./.dsh (isolated per workspace)"
-            echo "  --global, -g       Install configuration globally into ~/.dsh (shared across projects)"
+            echo "  --global, -g       Install configuration globally into $HOME/.dsh (shared across projects)"
             echo "  --dir, -d <path>   Install configuration into a custom directory"
             echo "  --help, -h         Show this help message"
             exit 0
@@ -54,7 +54,7 @@ DSH_DIR="$(cd "${DSH_TARGET}" 2>/dev/null && pwd || echo "${DSH_TARGET}")"
 export DSH_HOME="${DSH_DIR}"
 
 if [ "${DSH_DIR}" = "$HOME/.dsh" ]; then
-    echo "📁 DSH Configuration Target: ~/.dsh (Global Mode)"
+    echo "📁 DSH Configuration Target: $HOME/.dsh (Global Mode)"
 else
     echo "📁 DSH Configuration Target: ${DSH_DIR} (Workspace Mode)"
 fi

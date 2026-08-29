@@ -29,7 +29,7 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Options:"
             echo "  (default)          Reset local workspace configuration (./.dsh) and artifacts"
-            echo "  --global, -g       Reset global configuration (~/.dsh) only"
+            echo "  --global, -g       Reset global configuration ($HOME/.dsh) only"
             echo "  --dir, -d <path>   Reset custom configuration directory only"
             echo "  --force, -f, -y    Skip confirmation prompt"
             echo "  --help, -h         Show this help message"
@@ -55,7 +55,7 @@ elif [[ -n "${DSH_HOME:-}" ]]; then
     IS_LOCAL_MODE=$([ "$TARGET_DSH" = "$PWD/.dsh" ] && echo true || echo false)
 elif [ -f "$TARGET_MARKER" ]; then
     RAW_MARKER="$(head -n 1 "$TARGET_MARKER" | tr -d '[:space:]')"
-    if [ "$RAW_MARKER" = "~/.dsh" ] || [ "$RAW_MARKER" = "global" ]; then
+    if [ "$RAW_MARKER" = "$HOME/.dsh" ] || [ "$RAW_MARKER" = "global" ]; then
         TARGET_DSH="$HOME/.dsh"
         IS_LOCAL_MODE=false
     else
