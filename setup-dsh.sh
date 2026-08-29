@@ -121,6 +121,20 @@ EOF
 
 # 8. Explicitly resolve and link verified public ecosystem modules into the runtime profile
 echo "🔐 Deploying and linking external multi-profile plugin segments..."
+mkdir -p "$HOME/.dsh/profiles/web"
+cat << 'EOF' > "$HOME/.dsh/profiles/web/pnpm-workspace.yaml"
+packages:
+  - .
+
+nodeLinker: hoisted
+autoInstallPeers: false
+allowBuilds:
+  node-pty: true
+  "@deepseek-ai/dsh-subprocess-local": true
+  koffi: true
+  protobufjs: true
+  "@google/genai": true
+EOF
 # dsh-provider-model-configurator is pinned to upstream commit 70f8811 — bump deliberately.
 bunx @deepseek-ai/dsh plugin --profile web add dshmarket dsh-mcp-panel dsh-better-sidebar dsh-find-plugin @liustack/modsearch github:LiangYin233/dsh-provider-model-configurator#70f88112c7d92fadeb93e46f5dcb8b1f3ae6eba3
 
