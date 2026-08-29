@@ -262,6 +262,7 @@ Deep-dive guides live in [`docs/`](docs/):
 | [🧪 CI & Quality Gates](docs/ci.md) | What GitHub Actions validates on every push |
 | [🪟 Windows Support](docs/windows.md) | Why macOS/Linux only today, the WSL2 quick path, and a detailed native-porting guide |
 | [🔄 Upgrading](docs/upgrading.md) | Framework/plugin/model-catalog upgrade mechanics, and the gotcha where `setup-dsh.sh` re-runs silently overwrite your customizations |
+| [🤝 Contributing](CONTRIBUTING.md) | The verify-against-the-real-package discipline, CI gates, `reset.sh`/`setup-dsh.sh` caution, doc conventions, and the `ChangeRequest/` process |
 
 Proposed-but-not-yet-built improvements live in [`ChangeRequest/`](ChangeRequest/) — each one a Summary + Detail writeup meant to be challenged before it's implemented, not a roadmap commitment.
 
