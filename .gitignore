@@ -12,6 +12,7 @@ Thumbs.db
 # Node & Bun
 node_modules/
 package-lock.json
+pnpm-lock.yaml
 
 # Local DSH runtime & cache
 .dsh/

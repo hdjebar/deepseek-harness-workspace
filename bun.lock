@@ -18,6 +18,7 @@
   },
   "trustedDependencies": [
     "@google/genai",
+    "node-pty",
     "@deepseek-ai/dsh-subprocess-local",
     "koffi",
     "protobufjs",

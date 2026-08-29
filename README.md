@@ -194,21 +194,24 @@ pkill -9 -f "bun.*dsh" 2>/dev/null || pkill -9 -f "dsh-tui" 2>/dev/null || true
 
 ## 🧹 Clean Slate & Reset
 
-To completely reset the workspace and global configuration:
+To completely reset the workspace, purge stored credentials, and clean local caches:
 
 ```bash
-# 1. Kill running instances
-lsof -ti :3080 | xargs kill -9 2>/dev/null || true
-pkill -9 -f "bun.*dsh" 2>/dev/null || true
+# Interactive reset (prompts for confirmation)
+./reset.sh
+# or via npm/bun script
+bun run reset
 
-# 2. Wipe global DSH configuration and profiles
-rm -rf "$HOME/.dsh"
-
-# 3. Clean local workspace artifacts
-rm -rf node_modules package.json bun.lock .dsh
+# Non-interactive force reset (for CI or automation)
+./reset.sh --force
 ```
 
-*Re-run `./setup-dsh.sh` to initialize a brand-new environment.*
+The reset script safely:
+1. Terminates any lingering DSH web servers on port 3080 and background processes.
+2. Purges the global `~/.dsh` directory (credentials, profiles, patches).
+3. Cleans local untracked `node_modules`, `.dsh/`, and runtime logs.
+
+*To reinstall and configure fresh after reset, simply run `./setup-dsh.sh`.*
 
 ---
 

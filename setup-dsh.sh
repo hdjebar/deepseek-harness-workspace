@@ -242,7 +242,7 @@ bun pm trust --all || true
 bun -e '
   const fs = require("fs");
   const p = JSON.parse(fs.readFileSync("package.json", "utf8"));
-  p.scripts = { ...p.scripts, web: "dsh web", cli: "dsh-tui", headless: "dsh --profile headless", "sync-models": "bun run sync-models.js", ...(fs.existsSync("doctor.js") ? { doctor: "bun doctor.js" } : {}) };
+  p.scripts = { ...p.scripts, web: "dsh web", cli: "dsh-tui", headless: "dsh --profile headless", "sync-models": "bun run sync-models.js", ...(fs.existsSync("doctor.js") ? { doctor: "bun doctor.js" } : {}), ...(fs.existsSync("reset.sh") ? { reset: "bash reset.sh" } : {}) };
   fs.writeFileSync("package.json", JSON.stringify(p, null, 2));
 '
 
@@ -258,4 +258,5 @@ echo "➡️ To boot the Keyboard-First Terminal TUI:     bun run cli"
 echo "➡️ To resync live OpenRouter models (LOV):      bun run sync-models"
 echo "➡️ To invoke the Headless background pipeline:  bun run headless \"Your task\""
 echo "➡️ To run the read-only health check:          bun run doctor"
+echo "➡️ To completely wipe & reset the workspace:   bun run reset"
 echo "--------------------------------------------------------"
