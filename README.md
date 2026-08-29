@@ -18,7 +18,7 @@
 
 ---
 
-[🚀 Quick Start](#-quick-start-in-60-seconds) • [✨ Key Features](#-core-capabilities) • [🔍 Free Search](#-zero-cost-web-search-modsearch) • [🏛️ Architecture](#%EF%B8%8F-system-architecture) • [💻 Interfaces](#-runtime-interfaces) • [🩺 Health Doctor](#-diagnostic-health-check) • [🛡️ Security](#-security--sandboxing)
+[🚀 Quick Start](#-quick-start-in-60-seconds) • [✨ Key Features](#-core-capabilities) • [🛒 Plugin Store & Skills](#-everything-is-a-plugin-dshmarket--dsh-find-plugin) • [🔍 Free Search](#-zero-cost-web-search-modsearch) • [🏛️ Architecture](#%EF%B8%8F-system-architecture) • [🎭 Templates](#-persona--skill-templates) • [🩺 Doctor](#-diagnostic-health-check) • [🛡️ Security](#-security--sandboxing)
 
 ---
 
@@ -29,6 +29,7 @@
 | Feature | Description |
 | :--- | :--- |
 | 🌐 **Universal Gateway** | Stream completions directly from [OpenRouter](https://openrouter.ai) with streaming, tool calling, and multimodal reasoning across **390+ models**. |
+| 🛒 **Plugin & Skill Marketplace** | Pre-installed `dshmarket` (GUI Store) and `dsh-find-plugin` (Natural Language Discovery) to add community plugins, tools, and skills on the fly. |
 | 🔄 **Live Dynamic Model Sync** | `bun run sync-models` queries OpenRouter's live API to automatically register new frontier models into your runtime patch. |
 | 🔍 **Zero-Cost Web Search** | Pre-integrated `@liustack/modsearch` replaces paid search APIs with zero-config multi-engine web search & Firecrawl scraping. |
 | 🖥️ **Dual Interface Matrix** | Switch seamlessly between a **VS Code-style browser IDE** (`dsh-better-sidebar`) and a **Vim-inspired terminal matrix** (`dsh-tui`). |
@@ -36,6 +37,42 @@
 | 🔌 **Integrated MCP Hub** | Built-in Model Context Protocol panel (`dsh-mcp-panel`) with auto-discovery, trial execution console, and versioned backups. |
 | ⚙️ **Models Pro Configurator** | Dedicated Settings UI (`dsh-provider-model-configurator`) to tune context windows, max tokens, sampling parameters, and reasoning budgets. |
 | 🩺 **Non-Destructive Doctor** | Instant health diagnostics (`doctor.js`) validating runtime integrity, port bindings, permissions, and network connectivity. |
+
+---
+
+## 🛒 Everything is a Plugin (`dshmarket` & `dsh-find-plugin`)
+
+In the **DeepSeek Harness** architecture, **everything is a plugin** — skills, MCP adapters, UI widgets, LLM providers, and agent loops.
+
+This workspace comes pre-provisioned with both graphical and natural-language plugin management systems:
+
+```mermaid
+flowchart LR
+    AGENT["🤖 DSH Agent / User"] --> GUI["🛒 dshmarket\n(Visual Store in Web IDE)"]
+    AGENT --> NLP["🔍 dsh-find-plugin\n(Natural Language GitHub & npm Discovery)"]
+    GUI --> INSTALLED["📦 ~/.dsh/profiles/web/node_modules\n(Skills, Tools, Themes & MCPs)"]
+    NLP --> INSTALLED
+```
+
+### 1. Visual Marketplace (`dshmarket`)
+* Integrated directly into the Web Workbench UI (`http://127.0.0.1:3080`).
+* Browse, install, update, and toggle community plugins and skill packs with a single click.
+
+### 2. Natural-Language Plugin Discovery (`dsh-find-plugin`)
+* Ask your agent in natural language to find tools or capabilities during a session:
+  > *"Find a plugin for Docker container management"*  
+  > *"Search for community plugins that add PostgreSQL skills"*
+* The agent queries GitHub topics and npm registries dynamically, presenting installable plugin recommendations.
+
+### 3. CLI Plugin Management
+You can also add or remove plugins directly from your terminal:
+```bash
+# Add a plugin to the web profile
+bunx @deepseek-ai/dsh plugin --profile web add <plugin-name>
+
+# Example: Add custom community tools or skills
+bunx @deepseek-ai/dsh plugin --profile web add dsh-plugin-docker
+```
 
 ---
 
