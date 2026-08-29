@@ -18,7 +18,7 @@
 
 ---
 
-[🚀 Quick Start](#-quick-start-in-60-seconds) • [✨ Key Features](#-core-capabilities) • [🎨 Customization Guide](CUSTOMIZATION.md) • [🛒 Plugin Store](#-everything-is-a-plugin-dshmarket--dsh-find-plugin) • [🔍 Free Search](#-zero-cost-web-search-modsearch) • [🏛️ Architecture](#%EF%B8%8F-system-architecture) • [🩺 Doctor](#-diagnostic-health-check) • [🛡️ Security](#-security--sandboxing)
+[🚀 Quick Start](#-quick-start-in-60-seconds) • [✨ Key Features](#-core-capabilities) • [🎨 Customization Guide](docs/customization.md) • [🛒 Plugin Store](docs/plugins.md) • [🔍 Free Search](docs/search.md) • [🏛️ Architecture](docs/architecture.md) • [🩺 Doctor](#-diagnostic-health-check) • [🛡️ Security](docs/security.md)
 
 ---
 
@@ -42,110 +42,25 @@
 
 ## 🛒 Everything is a Plugin (`dshmarket` & `dsh-find-plugin`)
 
-In the **DeepSeek Harness** architecture, **everything is a plugin** — skills, MCP adapters, UI widgets, LLM providers, and agent loops.
+In the **DeepSeek Harness** architecture, **everything is a plugin** — skills, MCP adapters, UI widgets, LLM providers, and agent loops. This workspace ships with a visual marketplace (`dshmarket`), natural-language plugin discovery (`dsh-find-plugin`), CLI plugin management, and a per-profile capability matrix.
 
-This workspace comes pre-provisioned with both graphical and natural-language plugin management systems:
-
-```mermaid
-flowchart LR
-    AGENT["🤖 DSH Agent / User"] --> GUI["🛒 dshmarket\n(Visual Store in Web IDE)"]
-    AGENT --> NLP["🔍 dsh-find-plugin\n(Natural Language GitHub & npm Discovery)"]
-    GUI --> INSTALLED["📦 ~/.dsh/profiles/web/node_modules\n(Skills, Tools, Themes & MCPs)"]
-    NLP --> INSTALLED
-```
-
-### 1. Visual Marketplace (`dshmarket`)
-* Integrated directly into the Web Workbench UI (`http://127.0.0.1:3080`).
-* Browse, install, update, and toggle community plugins and skill packs with a single click.
-
-### 2. Natural-Language Plugin Discovery (`dsh-find-plugin`)
-* Ask your agent in natural language to find tools or capabilities during a session:
-  > *"Find a plugin for Docker container management"*  
-  > *"Search for community plugins that add PostgreSQL skills"*
-* The agent queries GitHub topics and npm registries dynamically, presenting installable plugin recommendations.
-
-### 3. CLI Plugin Management
-You can also add or remove plugins directly from your terminal per profile:
-```bash
-# Add a plugin to the web profile
-bunx @deepseek-ai/dsh plugin --profile web add <plugin-name>
-
-# Add a tool plugin to the headless profile
-bunx @deepseek-ai/dsh plugin --profile headless add <plugin-name>
-```
-
-### 4. Profile Capability Matrix
-
-| Capability | 🌐 `bun run web`<br>*(Web Workbench)* | ⌨️ `bun run cli`<br>*(Terminal TUI)* | 🤖 `bun run headless`<br>*(Background Agent)* |
-| :--- | :---: | :---: | :---: |
-| **Visual Plugin Store (`dshmarket`)** | ✅ Web UI Store | ❌ | ❌ |
-| **Visual VSCode Layout (`dsh-better-sidebar`)** | ✅ Browser Workbench | ❌ (Vim-style TUI) | ❌ |
-| **Visual MCP Cockpit (`dsh-mcp-panel`)** | ✅ Dedicated Settings UI | ❌ (YAML Config) | ❌ (YAML Config) |
-| **Model Pro Configurator** | ✅ Visual UI in Settings | ❌ (YAML Config) | ❌ (YAML Config) |
-| **Natural Language Discovery (`dsh-find-plugin`)** | ✅ Available to Agent | ✅ Available in Session | ✅ Available to Headless Agent |
-| **Free Search Engine (`@liustack/modsearch`)** | ✅ Enabled | ✅ Enabled | ✅ Enabled |
-| **Workspace Skills (`./skills/`)** | ✅ **Global** | ✅ **Global** | ✅ **Global** |
-| **OpenRouter 390+ Model Catalog** | ✅ **Global** | ✅ **Global** | ✅ **Global** |
-| **POSIX 0600 Credential Isolation** | ✅ **Global** | ✅ **Global** | ✅ **Global** |
+📖 **Full guide:** [docs/plugins.md](docs/plugins.md)
 
 ---
 
 ## 🔍 Zero-Cost Web Search (`@liustack/modsearch`)
 
-Standard AI agent harnesses often rely on expensive search APIs (Tavily, Bing, Google Search API) with separate monthly quotas and rate limits. This workspace integrates **[`@liustack/modsearch`](https://www.npmjs.com/package/@liustack/modsearch)** directly into the runtime profile.
+This workspace replaces paid search APIs (Tavily, Bing, Google Search API) with **[`@liustack/modsearch`](https://www.npmjs.com/package/@liustack/modsearch)** — a zero-key, multi-engine search and scraping provider pre-wired into the runtime profile.
 
-### 🌟 Why `@liustack/modsearch`?
-* 🆓 **Zero API Keys & Zero Cost:** Queries the web without requiring any subscription or credit card.
-* 🌐 **Multi-Engine Aggregator:** Automatically queries and falls back between DuckDuckGo, Bing, and open web indexers.
-* 🕷️ **Clean Web Scraping:** Uses Firecrawl-compatible web extraction to deliver sanitized, readable Markdown directly into the agent's reasoning loop.
-* ⚡ **Zero-Code Override:** Pre-configured in `~/.dsh/cordis.patch.yml` to automatically intercept and replace default paid search providers:
-
-```yaml
-# Disable default paid search in favor of free ModSearch
-- id: web-search-deepseek
-  disabled: true
-
-- id: web
-  config:
-    searchProvider: modsearch
-```
+📖 **Full guide:** [docs/search.md](docs/search.md)
 
 ---
 
 ## 🏛️ System Architecture
 
-```mermaid
-flowchart TD
-    subgraph Storage ["🔒 Isolated User Home (~/.dsh)"]
-        CRED["~/.dsh/.credentials.yaml\n(POSIX 0600 Managed Store)"]
-        PATCH["~/.dsh/cordis.patch.yml\n(Provider & Plugin Orchestration)"]
-        SETT["~/.dsh/settings.yaml\n(Default Model & Provider Routes)"]
-    end
+A diagram of the isolated credential store, the dual client interfaces (Web, TUI, Headless), the local Bun runtime engine, and the upstream OpenRouter/search infrastructure.
 
-    subgraph Interfaces ["💻 Dual Client Environments"]
-        WEB["🌐 Web Workbench (Port 3080)\nVS Code Sidebar & Editor"]
-        CLI["⌨️ Terminal Matrix\ndsh-tui (Vim-Style Navigation)"]
-        HEADLESS["🤖 Headless Agent Runner\ndsh --profile headless"]
-    end
-
-    subgraph Runtime ["⚡ Local DSH Engine (Bun v1.2+)"]
-        CORE["@deepseek-ai/dsh Kernel"]
-        MODSEARCH["🔍 Free ModSearch Provider"]
-        MCP["🔌 MCP Local Terminal Panel"]
-        SYNC["🔄 Dynamic Model Synchronizer"]
-    end
-
-    subgraph Remote ["☁️ Upstream AI Infrastructure"]
-        OR["🌐 OpenRouter Gateway v1\n(390+ Active Models)"]
-        WEB_NET["🌍 Web Search & Extraction"]
-    end
-
-    Storage --> Runtime
-    Runtime --> Interfaces
-    SYNC -->|Live Catalog Sync| OR
-    CORE -->|Streaming & Tool Calls| OR
-    MODSEARCH -->|Scraping & Queries| WEB_NET
-```
+📖 **Full diagram:** [docs/architecture.md](docs/architecture.md)
 
 ---
 
@@ -223,7 +138,7 @@ This workspace is designed to be fully customizable via conversational prompts, 
 * 🛒 **Community Plugins:** Install visual tools, sidebars, and models with 1-click via **`dshmarket`** in the Web UI.
 * 🔍 **Natural-Language Discovery:** Ask your agent in chat (*"Find a plugin for Docker / PostgreSQL"*) via **`dsh-find-plugin`**.
 * 🧠 **Custom Skills:** Add domain rules anytime by placing Markdown files in `./skills/<skill-name>/SKILL.md`.
-* 📖 **Learn More:** Check out the [**Customization Guide (CUSTOMIZATION.md)**](CUSTOMIZATION.md) for practical prompt recipes.
+* 📖 **Learn More:** Check out the [**Customization Guide**](docs/customization.md) for practical prompt recipes.
 
 ---
 
@@ -250,79 +165,20 @@ Run `bun run doctor` anytime for an instant, non-destructive health analysis of 
 
 ---
 
-## 🛡️ Security & Sandboxing
+## 📚 Documentation
 
-> [!IMPORTANT]
-> **Strict POSIX Credential Isolation**  
-> Credentials reside in `~/.dsh/.credentials.yaml` with strict `0600` permissions (readable/writable only by the owner) inside a `0700` directory. Legacy plaintext `.env` copies are automatically expunged on bootstrap.
+Deep-dive guides live in [`docs/`](docs/):
 
-> [!NOTE]
-> **Runtime Filesystem Sandboxing**  
-> Agent file mutations are fenced by DSH's native runtime sandbox policies (`read-only`, `workspace-write`, or `danger-full-access`). Dangerous filesystem mutations outside the workspace boundary require explicit user approval.
-
----
-
-## 🛑 Stopping & Killing Processes
-
-If a background DSH process, web server, or port (`3080`) is locked or lingering:
-
-```bash
-# Terminate lingering web server on port 3080
-lsof -ti :3080 | xargs kill -9 2>/dev/null || true
-
-# Kill any active DSH background processes
-pkill -9 -f "bun.*dsh" 2>/dev/null || pkill -9 -f "dsh-tui" 2>/dev/null || true
-```
-
----
-
-## 🧹 Clean Slate & Reset
-
-To completely reset the workspace, purge stored credentials, and clean local caches:
-
-```bash
-# Interactive local reset (prompts for confirmation)
-bun run reset
-# or
-./reset.sh
-
-# Reset global ~/.dsh configuration
-./reset.sh --global
-
-# Non-interactive force reset (for CI or automation)
-./reset.sh --force
-```
-
-The reset script safely:
-1. Terminates any lingering DSH web servers on the configured port (`3080` or `$DSH_PORT`).
-2. Purges the target configuration store (local `./.dsh` by default, or `~/.dsh` with `--global`).
-3. Cleans local untracked `node_modules`, `.dsh/`, and runtime logs in local mode (without affecting other workspaces).
-
-*To reinstall and configure fresh after reset, simply run `./setup-dsh.sh`.*
-
----
-
-## ❓ Troubleshooting Matrix
-
-| Issue / Symptom | Root Cause | Solution |
-| :--- | :--- | :--- |
-| **`HTTP 401 Unauthorized` on inference** | Invalid or revoked OpenRouter key | Check key status with `bun run doctor`, then re-run `./setup-dsh.sh` with a valid key from [openrouter.ai/keys](https://openrouter.ai/keys). |
-| **`Port 3080` already in use** | Lingering background DSH web process | Run `lsof -ti :3080 \| xargs kill -9` and relaunch `bun run web`. |
-| **Missing models in catalog** | Patch has not been synced recently | Execute `bun run sync-models` to pull real-time OpenRouter models. |
-| **"Failed to locate openrouter block anchor"** | `cordis.patch.yml` lost its `# Route default model` anchor | Re-run `./setup-dsh.sh` to regenerate the patch layer. |
-| **Plugin installation failure** | Network timeout during initial bootstrap | Re-run `./setup-dsh.sh` (setup is fully idempotent). |
-
----
-
-## 🧪 Automated CI & Quality Gates
-
-This repository is strictly validated by GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)):
-
-- 🛡️ **ShellCheck & Syntax Validation:** Rigorous style and syntax enforcement on all bash automation.
-- 📦 **Frozen Lockfile Concurrency:** Verification of byte-exact dependencies using `bun install --frozen-lockfile`.
-- 🔄 **Idempotent Model Syncing:** Validates that live catalog updates preserve patch integrity without duplication.
-- 🩺 **Negative Diagnostic Tests:** Ensures error conditions and missing credentials fail loudly and predictably.
-- 📜 **YAML Schema Validation:** Python `pyyaml` validation verifying provider and model block structures.
+| Guide | Covers |
+| :--- | :--- |
+| [🎨 Customization](docs/customization.md) | Prompt-driven plugins, MCP servers, skills, model tuning, sandbox modes, headless pipelines |
+| [🛒 Plugins & Marketplace](docs/plugins.md) | `dshmarket`, `dsh-find-plugin`, CLI plugin management, profile capability matrix |
+| [🔍 Free Web Search](docs/search.md) | `@liustack/modsearch` zero-cost search integration |
+| [🏛️ Architecture](docs/architecture.md) | System diagram — storage, interfaces, runtime, upstream infrastructure |
+| [🛡️ Security & Sandboxing](docs/security.md) | Credential isolation, filesystem sandbox policies |
+| [🧹 Stopping & Resetting](docs/reset.md) | Killing lingering processes, `reset.sh` clean-slate workflow |
+| [❓ Troubleshooting](docs/troubleshooting.md) | Common errors and fixes |
+| [🧪 CI & Quality Gates](docs/ci.md) | What GitHub Actions validates on every push |
 
 ---
 

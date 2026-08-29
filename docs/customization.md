@@ -161,3 +161,7 @@ DSH_PORT=3081 bun run doctor
 | **Check Health** | Run diagnostic | `bun run doctor` |
 | **Reset Local Config** | Clean workspace setup | `bun run reset` |
 | **Reset Global Config** | Clean global setup | `./reset.sh --global` |
+
+---
+
+[← Back to README](../README.md)
