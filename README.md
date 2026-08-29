@@ -83,6 +83,9 @@ A diagram of the isolated credential store, the dual client interfaces (Web, TUI
 
 ## 🚀 Quick Start in 60 Seconds
 
+> [!NOTE]
+> **Platform support:** DSH targets **macOS and Linux** natively — `setup-dsh.sh` and `reset.sh` are bash scripts, and the credential vault relies on POSIX `chmod` permissions. On Windows, run it inside **WSL2** (fully supported, ~10 minutes, zero code changes). See [docs/windows.md](docs/windows.md) for the WSL2 quick path and a detailed guide for anyone porting a native PowerShell version.
+
 ### 1. Prerequisites
 Ensure the **Bun Runtime** is installed on your host machine:
 
@@ -196,6 +199,7 @@ Deep-dive guides live in [`docs/`](docs/):
 | [🧹 Stopping & Resetting](docs/reset.md) | Killing lingering processes, `reset.sh` clean-slate workflow |
 | [❓ Troubleshooting](docs/troubleshooting.md) | Common errors and fixes |
 | [🧪 CI & Quality Gates](docs/ci.md) | What GitHub Actions validates on every push |
+| [🪟 Windows Support](docs/windows.md) | Why macOS/Linux only today, the WSL2 quick path, and a detailed native-porting guide |
 
 ---
 
