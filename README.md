@@ -187,7 +187,16 @@ bun run doctor
 bun run reset                              # Resets local ./.dsh workspace configuration and artifacts
 ./reset.sh --global                        # Resets global ~/.dsh configuration only
 ./reset.sh --dir /path/to/dsh-config       # Resets a custom-directory workspace (see the --dir tip above)
+
+# 🔄 7. Upgrade the framework (see docs/upgrading.md for details and gotchas)
+bun update
+bun run sync-models
+bun run doctor
+git add bun.lock package.json && git commit -m "chore: upgrade @deepseek-ai/dsh and dsh-tui"
 ```
+
+> [!NOTE]
+> This is the routine case only — crossing a minor version boundary, upgrading plugins, or upgrading the git-commit-pinned `dsh-provider-model-configurator` each work differently, and re-running `setup-dsh.sh` for any of this will overwrite your customizations. See [docs/upgrading.md](docs/upgrading.md) for the full picture.
 
 > [!TIP]
 > **Running Multiple Workspaces Simultaneously (Port Customization):**  
