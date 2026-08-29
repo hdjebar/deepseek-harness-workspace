@@ -1,14 +1,63 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-clear
+# 1. Parse command line arguments for target configuration directory
+# Default: Local Workspace Mode ($(pwd)/.dsh)
+# Options:
+#   --global, -g       : Install configuration globally into ~/.dsh
+#   --dir, -d <path>   : Install configuration into a custom directory
+DSH_TARGET="${DSH_HOME:-$(pwd)/.dsh}"
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --global|-g)
+            DSH_TARGET="$HOME/.dsh"
+            shift
+            ;;
+        --dir|-d)
+            if [[ -n "${2:-}" ]]; then
+                DSH_TARGET="$2"
+                shift 2
+            else
+                echo "❌ Error: --dir requires a directory path argument."
+                exit 1
+            fi
+            ;;
+        --help|-h)
+            echo "Usage: ./setup-dsh.sh [OPTIONS]"
+            echo ""
+            echo "Options:"
+            echo "  (default)          Install configuration locally into ./.dsh (isolated per workspace)"
+            echo "  --global, -g       Install configuration globally into ~/.dsh (shared across projects)"
+            echo "  --dir, -d <path>   Install configuration into a custom directory"
+            echo "  --help, -h         Show this help message"
+            exit 0
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
+
+[ -t 1 ] && clear 2>/dev/null || true
 echo "=========================================================================="
 echo "    DEEPSEEK HARNESS (DSH) MASTER PRODUCTION ENV BOOTSTRAP                "
 echo "    [OpenRouter + Free Search + VSCode UX + TUI Matrix + Models Pro]      "
 echo "=========================================================================="
 echo ""
 
-# 1. Enforce structural execution dependency check (Fail-Fast Gate)
+mkdir -p "${DSH_TARGET}"
+DSH_DIR="$(cd "${DSH_TARGET}" 2>/dev/null && pwd || echo "${DSH_TARGET}")"
+export DSH_HOME="${DSH_DIR}"
+
+if [ "${DSH_DIR}" = "$HOME/.dsh" ]; then
+    echo "📁 DSH Configuration Target: ~/.dsh (Global Mode)"
+else
+    echo "📁 DSH Configuration Target: ${DSH_DIR} (Local Workspace Mode)"
+fi
+echo ""
+
+# 2. Enforce structural execution dependency check (Fail-Fast Gate)
 if ! command -v bun &> /dev/null; then
     echo "❌ Execution Aborted: 'bun' binary runtime is missing from your system."
     echo "   Please install it first: curl -fsSL https://bun.sh | bash"
@@ -17,11 +66,11 @@ fi
 echo "✅ Detected Bun runtime: $(bun --version)"
 echo ""
 
-# 2. Capture the OpenRouter key silently without outputting it to logs
+# 3. Capture the OpenRouter key silently without outputting it to logs
 read -rsp "Enter your OpenRouter Master API Key (sk-or-...): " OR_KEY; echo ""
 OR_KEY="$(printf '%s' "${OR_KEY}" | tr -d '[:space:]')"
 
-# 3. Pre-flight Gate: Validate the captured key pattern
+# 3a. Pre-flight Gate: Validate the captured key pattern
 if [[ -z "${OR_KEY}" || ! "${OR_KEY}" =~ ^sk-or- ]]; then
     echo "❌ Input Validation Error: Invalid OpenRouter API Key structure."
     echo "   Your token must begin with the standard 'sk-or-' prefix and cannot be empty."
@@ -56,8 +105,6 @@ if [ ! -d ".git" ]; then
 fi
 
 # 5. Initialize project manifest context if missing and install core bundle
-# Reproducible installs: existing manifests resolve through the committed
-# bun.lock; only truly fresh (non-clone) directories take new `bun add` ranges.
 echo "⚡ Installing DeepSeek Harness framework engine & TUI via Bun..."
 if [ ! -f "package.json" ]; then
     bun init -y > /dev/null
@@ -67,14 +114,14 @@ else
     bun install
 fi
 
-# 6. Build global user home configuration directory tree and tighten access rights
+# 6. Establish strict folder boundary permissions
 echo "🛡️ Establishing strict OS-level folder boundary permissions..."
-mkdir -p "$HOME/.dsh"
-chmod 700 "$HOME/.dsh"
+mkdir -p "${DSH_DIR}"
+chmod 700 "${DSH_DIR}"
 
 # 7. Generate the Unified Zero-Plaintext Master Patch Orchestration Template (Top-level YAML Array)
-echo "✍️ Writing verified configuration patch layer to ~/.dsh/cordis.patch.yml..."
-cat << 'EOF' > "$HOME/.dsh/cordis.patch.yml"
+echo "✍️ Writing verified configuration patch layer to ${DSH_DIR}/cordis.patch.yml..."
+cat << 'EOF' > "${DSH_DIR}/cordis.patch.yml"
 # Disable default official DeepSeek provider in favor of OpenRouter Gateway
 - id: llm-deepseek
   disabled: true
@@ -121,8 +168,8 @@ EOF
 
 # 8. Explicitly resolve and link verified public ecosystem modules into the runtime profiles
 echo "🔐 Deploying and linking external multi-profile plugin segments..."
-mkdir -p "$HOME/.dsh/profiles/web"
-cat << 'EOF' > "$HOME/.dsh/profiles/web/pnpm-workspace.yaml"
+mkdir -p "${DSH_DIR}/profiles/web"
+cat << 'EOF' > "${DSH_DIR}/profiles/web/pnpm-workspace.yaml"
 packages:
   - .
 
@@ -136,10 +183,10 @@ allowBuilds:
   "@google/genai": true
 EOF
 # dsh-provider-model-configurator is pinned to upstream commit 70f8811 — bump deliberately.
-bunx @deepseek-ai/dsh plugin --profile web add dshmarket dsh-mcp-panel dsh-better-sidebar dsh-find-plugin @liustack/modsearch github:LiangYin233/dsh-provider-model-configurator#70f88112c7d92fadeb93e46f5dcb8b1f3ae6eba3
+DSH_HOME="${DSH_DIR}" bunx @deepseek-ai/dsh plugin --profile web add dshmarket dsh-mcp-panel dsh-better-sidebar dsh-find-plugin @liustack/modsearch github:LiangYin233/dsh-provider-model-configurator#70f88112c7d92fadeb93e46f5dcb8b1f3ae6eba3
 
-mkdir -p "$HOME/.dsh/profiles/headless"
-cat << 'EOF' > "$HOME/.dsh/profiles/headless/pnpm-workspace.yaml"
+mkdir -p "${DSH_DIR}/profiles/headless"
+cat << 'EOF' > "${DSH_DIR}/profiles/headless/pnpm-workspace.yaml"
 packages:
   - .
 
@@ -151,18 +198,18 @@ allowBuilds:
   protobufjs: true
   "@google/genai": true
 EOF
-bunx @deepseek-ai/dsh plugin --profile headless add dsh-find-plugin @liustack/modsearch
+DSH_HOME="${DSH_DIR}" bunx @deepseek-ai/dsh plugin --profile headless add dsh-find-plugin @liustack/modsearch
 
-# 9. Store OpenRouter API credentials in the managed credential store and configure ~/.dsh/settings.yaml
-echo "🗝️ Injecting token into the managed store ~/.dsh/.credentials.yaml and configuring ~/.dsh/settings.yaml..."
-cat << EOF > "$HOME/.dsh/.credentials.yaml"
+# 9. Store OpenRouter API credentials in the managed credential store and configure settings.yaml
+echo "🗝️ Injecting token into the managed store ${DSH_DIR}/.credentials.yaml and configuring ${DSH_DIR}/settings.yaml..."
+cat << EOF > "${DSH_DIR}/.credentials.yaml"
 version: 1
 refs:
   OPENROUTER_API_KEY: "${OR_KEY}"
 EOF
-chmod 600 "$HOME/.dsh/.credentials.yaml"
+chmod 600 "${DSH_DIR}/.credentials.yaml"
 
-cat << EOF > "$HOME/.dsh/settings.yaml"
+cat << EOF > "${DSH_DIR}/settings.yaml"
 llm-pi-ai:
   providers:
     openrouter:
@@ -171,11 +218,11 @@ agent-default-model:
   provider: openrouter
   model: deepseek/deepseek-chat
 EOF
-chmod 600 "$HOME/.dsh/settings.yaml"
+chmod 600 "${DSH_DIR}/settings.yaml"
 
-# Single-copy consolidation: the managed store outranks the ~/.dsh/.env
+# Single-copy consolidation: the managed store outranks the .env
 # user-env fallback layer, so purge the legacy plaintext duplicate.
-rm -f "$HOME/.dsh/.env"
+rm -f "${DSH_DIR}/.env"
 
 # 10. Provision the sync tool on fresh setups, and upgrade pre-hardening copies
 # (older embedded versions failed silently when the patch anchor was missing)
@@ -208,9 +255,13 @@ async function syncOpenRouterModels() {
     name: m.name || m.id
   }));
 
-  const patchPath = path.join(os.homedir(), ".dsh", "cordis.patch.yml");
+  const dshDir = process.env.DSH_HOME 
+    ? path.resolve(process.env.DSH_HOME) 
+    : (fs.existsSync(path.join(process.cwd(), ".dsh")) ? path.join(process.cwd(), ".dsh") : path.join(os.homedir(), ".dsh"));
+
+  const patchPath = path.join(dshDir, "cordis.patch.yml");
   if (!fs.existsSync(patchPath)) {
-    throw new Error(`~/.dsh/cordis.patch.yml not found at ${patchPath}`);
+    throw new Error(`cordis.patch.yml not found at ${patchPath}`);
   }
 
   const patchContent = fs.readFileSync(patchPath, "utf8");
@@ -240,7 +291,7 @@ ${modelsYaml}`;
   const updatedContent = patchContent.replace(anchorRe, openrouterBlock + "\n");
 
   fs.writeFileSync(patchPath, updatedContent, "utf8");
-  console.log(`🎉 Successfully synced ${models.length} live OpenRouter models into ~/.dsh/cordis.patch.yml!`);
+  console.log(`🎉 Successfully synced ${models.length} live OpenRouter models into ${patchPath}!`);
 }
 
 syncOpenRouterModels().catch(err => {
@@ -257,17 +308,26 @@ bun pm trust --all || true
 bun -e '
   const fs = require("fs");
   const p = JSON.parse(fs.readFileSync("package.json", "utf8"));
-  p.scripts = { ...p.scripts, web: "dsh web", cli: "dsh-tui", headless: "dsh --profile headless", "sync-models": "bun run sync-models.js", ...(fs.existsSync("doctor.js") ? { doctor: "bun doctor.js" } : {}), ...(fs.existsSync("reset.sh") ? { reset: "bash reset.sh" } : {}) };
+  p.scripts = {
+    ...p.scripts,
+    web: "dsh web",
+    cli: "dsh-tui",
+    headless: "dsh --profile headless",
+    "sync-models": "bun run sync-models.js",
+    ...(fs.existsSync("doctor.js") ? { doctor: "bun doctor.js" } : {}),
+    ...(fs.existsSync("reset.sh") ? { reset: "bash reset.sh" } : {})
+  };
   fs.writeFileSync("package.json", JSON.stringify(p, null, 2));
 '
 
 # 12. Automatically execute live model sync on bootstrap (runs last so a sync
 # failure — e.g. offline — cannot skip the script bindings above)
 echo "🔄 Automatically syncing live OpenRouter models into runtime..."
-bun run sync-models.js
+DSH_HOME="${DSH_DIR}" bun run sync-models.js
 
 echo -e "\n🏆 CONSOLIDATED ENVIRONMENT COMPILED SUCCESSFULLY!"
 echo "--------------------------------------------------------"
+echo "➡️ Target Configuration Folder:                 ${DSH_DIR}"
 echo "➡️ To boot the VS-Code Web Workbench UI:       bun run web"
 echo "➡️ To boot the Keyboard-First Terminal TUI:     bun run cli"
 echo "➡️ To resync live OpenRouter models (LOV):      bun run sync-models"

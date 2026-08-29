@@ -14,7 +14,17 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 
-const HOME_DSH = path.join(os.homedir(), ".dsh");
+function resolveDshDir() {
+  if (process.env.DSH_HOME) return path.resolve(process.env.DSH_HOME);
+  const localDir = path.join(process.cwd(), ".dsh");
+  if (fs.existsSync(localDir)) return localDir;
+  return path.join(os.homedir(), ".dsh");
+}
+
+const HOME_DSH = resolveDshDir();
+const IS_LOCAL = HOME_DSH.startsWith(process.cwd());
+const DISPLAY_TARGET = IS_LOCAL ? `./.dsh (local workspace)` : HOME_DSH.replace(os.homedir(), "~");
+
 const PLUGIN_DIR = path.join(HOME_DSH, "profiles", "web", "node_modules");
 const HEADLESS_PLUGIN_DIR = path.join(HOME_DSH, "profiles", "headless", "node_modules");
 const EXPECTED_PLUGINS = [
@@ -49,13 +59,13 @@ function resolveKey() {
   const credDoc = readIfExists(path.join(HOME_DSH, ".credentials.yaml"));
   if (credDoc) {
     const m = credDoc.match(/^\s+OPENROUTER_API_KEY:\s*["']?([^\s"'\r\n]+)["']?\s*$/m);
-    if (m) return { key: m[1], source: "~/.dsh/.credentials.yaml (managed store)" };
+    if (m) return { key: m[1], source: `${DISPLAY_TARGET}/.credentials.yaml (managed store)` };
   }
 
   const userEnv = readIfExists(path.join(HOME_DSH, ".env"));
   if (userEnv) {
     const m = userEnv.match(/^OPENROUTER_API_KEY\s*=\s*["']?([^\s"'\r\n]+)["']?\s*$/m);
-    if (m) return { key: m[1], source: "~/.dsh/.env (user-env fallback)" };
+    if (m) return { key: m[1], source: `${DISPLAY_TARGET}/.env (user-env fallback)` };
   }
   return null;
 }
@@ -64,7 +74,7 @@ async function checkCredentials() {
   const found = resolveKey();
   if (!found) {
     fail("OpenRouter credentials",
-      "none found (environment → ~/.dsh/.credentials.yaml → ~/.dsh/.env) — run ./setup-dsh.sh");
+      `none found (environment → ${DISPLAY_TARGET}/.credentials.yaml → ${DISPLAY_TARGET}/.env) — run ./setup-dsh.sh`);
     return;
   }
   try {
@@ -74,19 +84,19 @@ async function checkCredentials() {
     if (res.status === 200) {
       let detail = `source: ${found.source}`;
       try {
-        const d = (await res.json())?.data ?? {};
-        const bits = [d.label, d.limit === null ? "no spending limit" : d.limit != null ? `limit: ${d.limit}` : null]
-          .filter(Boolean);
-        if (bits.length) detail += `; ${bits.join(", ")}`;
-      } catch { /* body shape drift is non-fatal */ }
+        const body = await res.json();
+        const label = body?.data?.label ?? "";
+        const limit = body?.data?.limit == null ? "no spending limit" : `$${body.data.limit}`;
+        if (label || limit) detail += `; ${[label, limit].filter(Boolean).join(", ")}`;
+      } catch { /* JSON payload optional */ }
       pass("OpenRouter key valid", detail);
     } else if (res.status === 401) {
-      fail("OpenRouter key valid", `rejected (HTTP 401); source: ${found.source} — re-run ./setup-dsh.sh`);
+      fail("OpenRouter key rejected", `HTTP 401 Unauthorized (source: ${found.source})`);
     } else {
-      warn("OpenRouter key check", `unexpected HTTP ${res.status}; source: ${found.source}`);
+      warn("OpenRouter key check", `HTTP ${res.status} from https://openrouter.ai/api/v1/auth/key`);
     }
   } catch (err) {
-    warn("OpenRouter reachable", `${err.message} (offline?) — key source: ${found.source}`);
+    warn("OpenRouter unreachable", `${err.message} (skipping live validation)`);
   }
 }
 
@@ -102,7 +112,7 @@ function checkPatch() {
     return;
   }
   const modelCount = (content.match(/^\s+- id:\s*["'][^"']+["']/gm) || []).length;
-  if (modelCount > 0) pass("Model catalog synced", `${modelCount} models in cordis.patch.yml`);
+  if (modelCount > 0) pass("Model catalog synced", `${modelCount} models in ${DISPLAY_TARGET}/cordis.patch.yml`);
   else warn("Model catalog synced", "0 models — run: bun run sync-models");
 
   if (/# Route default model|^- id: agent-default-model/m.test(content)) {
@@ -114,10 +124,11 @@ function checkPatch() {
 }
 
 function checkSettings() {
-  const content = readIfExists(path.join(HOME_DSH, "settings.yaml"));
-  if (content === null) { warn("Settings layer", "~/.dsh/settings.yaml not found — run ./setup-dsh.sh"); return; }
-  if (content.includes("openrouter")) pass("Settings layer", "~/.dsh/settings.yaml routes openrouter");
-  else warn("Settings layer", "settings.yaml does not mention openrouter — run ./setup-dsh.sh");
+  const settingsPath = path.join(HOME_DSH, "settings.yaml");
+  const content = readIfExists(settingsPath);
+  if (content === null) { warn("Settings layer", `${settingsPath} not found — run ./setup-dsh.sh`); return; }
+  if (content.includes("openrouter")) pass("Settings layer", `${DISPLAY_TARGET}/settings.yaml routes openrouter`);
+  else warn("Settings layer", `${DISPLAY_TARGET}/settings.yaml does not mention openrouter — run ./setup-dsh.sh`);
 }
 
 function checkWorkspace() {

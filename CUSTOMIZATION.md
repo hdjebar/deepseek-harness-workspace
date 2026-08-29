@@ -95,8 +95,8 @@ With OpenRouter's dynamic gateway (390+ models), you can switch models or adjust
 > 💬 *"Set temperature to 0.0 for strict deterministic code auditing."*
 
 ### Where Configurations Live:
-* **Settings:** `~/.dsh/settings.yaml` (default model routing)
-* **Runtime Patch:** `~/.dsh/cordis.patch.yml` (provider definitions)
+* **Settings:** `./.dsh/settings.yaml` (or `~/.dsh/settings.yaml` in global mode)
+* **Runtime Patch:** `./.dsh/cordis.patch.yml` (or `~/.dsh/cordis.patch.yml` in global mode)
 * **Model Pro UI:** Accessible directly under `Settings -> Model Pro` in the Web IDE (`http://127.0.0.1:3080`).
 
 ---
@@ -138,8 +138,9 @@ bun run headless "Implement a dark-mode toggle for the navbar in src/components/
 | Goal | Method | Location / Command |
 | :--- | :--- | :--- |
 | **Add Plugins** | Prompt agent or use GUI Store | `dshmarket` in Web UI / `dsh-find-plugin` |
-| **Add MCP Servers** | Prompt agent or edit YAML | `dsh-mcp-panel` / `~/.dsh/cordis.patch.yml` |
+| **Add MCP Servers** | Prompt agent or edit YAML | `dsh-mcp-panel` / `./.dsh/cordis.patch.yml` |
 | **Add Skills** | Prompt agent to write Markdown | `./skills/<name>/SKILL.md` |
 | **Sync Models** | Run sync command | `bun run sync-models` |
 | **Check Health** | Run diagnostic | `bun run doctor` |
-| **Reset Config** | Run reset script | `bun run reset` |
+| **Reset Local Config** | Clean workspace setup | `bun run reset` |
+| **Reset Global Config** | Clean global setup | `./reset.sh --global` |

@@ -24,9 +24,13 @@ async function syncOpenRouterModels() {
     name: m.name || m.id
   }));
 
-  const patchPath = path.join(os.homedir(), ".dsh", "cordis.patch.yml");
+  const dshDir = process.env.DSH_HOME 
+    ? path.resolve(process.env.DSH_HOME) 
+    : (fs.existsSync(path.join(process.cwd(), ".dsh")) ? path.join(process.cwd(), ".dsh") : path.join(os.homedir(), ".dsh"));
+
+  const patchPath = path.join(dshDir, "cordis.patch.yml");
   if (!fs.existsSync(patchPath)) {
-    throw new Error(`~/.dsh/cordis.patch.yml not found at ${patchPath}`);
+    throw new Error(`cordis.patch.yml not found at ${patchPath}`);
   }
 
   const patchContent = fs.readFileSync(patchPath, "utf8");
@@ -56,7 +60,7 @@ ${modelsYaml}`;
   const updatedContent = patchContent.replace(anchorRe, openrouterBlock + "\n");
 
   fs.writeFileSync(patchPath, updatedContent, "utf8");
-  console.log(`🎉 Successfully synced ${models.length} live OpenRouter models into ~/.dsh/cordis.patch.yml!`);
+  console.log(`🎉 Successfully synced ${models.length} live OpenRouter models into ${patchPath}!`);
 }
 
 syncOpenRouterModels().catch(err => {

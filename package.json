@@ -19,9 +19,9 @@
     "protobufjs"
   ],
   "scripts": {
-    "web": "dsh web",
-    "cli": "dsh-tui",
-    "headless": "dsh --profile headless",
+    "web": "DSH_HOME=\"${DSH_HOME:-./.dsh}\" dsh web",
+    "cli": "DSH_HOME=\"${DSH_HOME:-./.dsh}\" dsh-tui",
+    "headless": "DSH_HOME=\"${DSH_HOME:-./.dsh}\" dsh --profile headless",
     "sync-models": "bun run sync-models.js",
     "doctor": "bun doctor.js",
     "reset": "bash reset.sh"

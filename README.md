@@ -158,18 +158,26 @@ Ensure the **Bun Runtime** is installed on your host machine:
 curl -fsSL https://bun.sh/install | bash
 ```
 
-### 2. One-Line Environment Bootstrap
-Clone the repository and run the interactive setup pipeline:
+### 2. Environment Bootstrap (Isolated Local Setup by Default)
+Clone the repository and run the setup pipeline:
 
 ```bash
 git clone https://github.com/hdjebar/deepseek-harness-workspace.git
 cd deepseek-harness-workspace
 chmod +x setup-dsh.sh
+
+# 📦 Default: Install locally into ./.dsh (100% isolated per workspace)
 ./setup-dsh.sh
+
+# 🌍 Optional: Install globally into ~/.dsh (shared across projects)
+./setup-dsh.sh --global
+
+# 📁 Optional: Install into a custom directory
+./setup-dsh.sh --dir /path/to/dsh-config
 ```
 
 > [!TIP]
-> Provide your OpenRouter API key (`sk-or-...`) when securely prompted. The installer validates your token remotely before writing any configuration.
+> **Local by Default:** Configurations, credentials, and plugins are stored in `./.dsh` (already ignored by `.gitignore`). You can have multiple distinct DSH workspaces on the same machine without any cross-project conflicts!
 
 ---
 
@@ -188,11 +196,12 @@ bun run headless "Audit this repository and suggest architecture optimizations"
 # 🔄 4. Synchronize Live Models from OpenRouter
 bun run sync-models
 
-# 🩺 5. Run the Workspace Health Diagnostic
+# 🩺 5. Run the Workspace Health Diagnostic (Detects local vs global target)
 bun run doctor
 
-# 🧹 6. Complete Workspace & Global Reset
-bun run reset
+# 🧹 6. Clean Slate Workspace Reset
+bun run reset            # Resets local ./.dsh workspace configuration
+./reset.sh --global      # Resets global ~/.dsh configuration
 ```
 
 ---
