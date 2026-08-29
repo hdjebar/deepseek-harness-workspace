@@ -4,6 +4,7 @@ set -euo pipefail
 FORCE=false
 GLOBAL_RESET=false
 CUSTOM_DIR=""
+USER_HOME="${HOME:-$PWD}"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -29,7 +30,7 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Options:"
             echo "  (default)          Reset local workspace configuration (./.dsh) and artifacts"
-            echo "  --global, -g       Reset global configuration (${HOME:-~}/.dsh) only"
+            echo "  --global, -g       Reset global configuration (${USER_HOME}/.dsh) only"
             echo "  --dir, -d <path>   Reset custom configuration directory only"
             echo "  --force, -f, -y    Skip confirmation prompt"
             echo "  --help, -h         Show this help message"
@@ -52,8 +53,7 @@ if [ -f "$TARGET_MARKER" ]; then
 fi
 
 IS_GLOBAL_MARKER=false
-USER_HOME="${HOME:-$(cd ~ 2>/dev/null && pwd || echo "")}"
-if [ "$RAW_MARKER" = "global" ] || [ "$RAW_MARKER" = "~/.dsh" ] || [ "$RAW_MARKER" = "${USER_HOME}/.dsh" ]; then
+if [ "$RAW_MARKER" = "global" ] || [ "$RAW_MARKER" = "${USER_HOME}/.dsh" ] || [[ "$RAW_MARKER" == *"/.dsh" && "$RAW_MARKER" == *"$USER_HOME/.dsh" ]]; then
     IS_GLOBAL_MARKER=true
 fi
 

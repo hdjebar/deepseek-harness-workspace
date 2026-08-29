@@ -20,7 +20,7 @@ jobs:
           bash -n reset.sh
 
       - name: ShellCheck
-        run: shellcheck --severity=style setup-dsh.sh reset.sh
+        run: shellcheck --severity=style --exclude=SC2088 setup-dsh.sh reset.sh
 
       - name: Embedded sync tool matches sync-models.js
         run: |

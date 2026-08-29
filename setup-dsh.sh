@@ -6,12 +6,13 @@ set -euo pipefail
 # Options:
 #   --global, -g       : Install configuration globally into ~/.dsh
 #   --dir, -d <path>   : Install configuration into a custom directory
+USER_HOME="${HOME:-$PWD}"
 DSH_TARGET="${DSH_HOME:-$PWD/.dsh}"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --global|-g)
-            DSH_TARGET="$HOME/.dsh"
+            DSH_TARGET="${USER_HOME}/.dsh"
             shift
             ;;
         --dir|-d)
@@ -28,7 +29,7 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Options:"
             echo "  (default)          Install configuration locally into ./.dsh (isolated per workspace)"
-            echo "  --global, -g       Install configuration globally into ${HOME:-~}/.dsh (shared across projects)"
+            echo "  --global, -g       Install configuration globally into ${USER_HOME}/.dsh (shared across projects)"
             echo "  --dir, -d <path>   Install configuration into a custom directory"
             echo "  --help, -h         Show this help message"
             exit 0
@@ -53,8 +54,7 @@ mkdir -p "${DSH_TARGET}"
 DSH_DIR="$(cd "${DSH_TARGET}" 2>/dev/null && pwd || echo "${DSH_TARGET}")"
 export DSH_HOME="${DSH_DIR}"
 
-USER_HOME="${HOME:-$(cd ~ 2>/dev/null && pwd || echo "")}"
-if [ -n "$USER_HOME" ] && [ "${DSH_DIR}" = "${USER_HOME}/.dsh" ]; then
+if [ "${DSH_DIR}" = "${USER_HOME}/.dsh" ]; then
     echo "📁 DSH Configuration Target: ${USER_HOME}/.dsh (Global Mode)"
 else
     echo "📁 DSH Configuration Target: ${DSH_DIR} (Workspace Mode)"
