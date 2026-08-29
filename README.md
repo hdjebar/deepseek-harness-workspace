@@ -20,7 +20,7 @@
 
 ---
 
-[🚀 Quick Start](#-quick-start-in-60-seconds) • [🤔 Why DSH?](#-why-dsh) • [✨ Key Features](#-core-capabilities) • [🎨 Customization Guide](docs/customization.md) • [🛒 Plugin Store](docs/plugins.md) • [🔍 Free Search](docs/search.md) • [🏛️ Architecture](docs/architecture.md) • [🩺 Doctor](#-diagnostic-health-check) • [🛡️ Security](docs/security.md)
+[🤔 Why](#-why-dsh) • [💡 What](#-what-is-dsh) • [🎯 Who It's For](#-who-its-for) • [⏱️ When](#-when-to-reach-for-dsh) • [🏛️ How](#-how-it-works) • [🚀 Quick Start](#-quick-start-in-60-seconds) • [✨ Features](#-core-capabilities) • [🎨 Customize](docs/customization.md) • [🛡️ Security](docs/security.md)
 
 ---
 
@@ -41,6 +41,67 @@ If you want an AI workbench that's actually *yours* — local, inspectable, and 
 
 ---
 
+## 💡 What is DSH?
+
+DeepSeek Harness (DSH) is a **Bun-powered bootstrap and configuration layer** around the [`@deepseek-ai/dsh`](https://github.com/deepseek-ai) agent framework — it is not itself a model, and it's not a hosted product. Running `./setup-dsh.sh` once wires up a single isolated workspace with:
+
+* an OpenRouter gateway across 390+ models,
+* a free, multi-engine web search provider,
+* a plugin marketplace and MCP tooling console,
+* three interfaces — web IDE, terminal TUI, headless runner — that all read the same configuration.
+
+Everything it configures is plain YAML/JSON on your own disk (`cordis.patch.yml`, `settings.yaml`, `.credentials.yaml`), not a proprietary format or a cloud account. That's what makes it *yours*: you can read, edit, or version every piece of it.
+
+---
+
+## 🎯 Who It's For
+
+* **Solo developers & indie hackers** who want one workbench across many models instead of separate accounts, keys, and billing per provider.
+* **Builders who want to own their setup** — inspectable config, a local credential vault, and a `./skills/` folder that becomes a personal knowledge base over time (see the [Customization Guide](docs/customization.md)).
+* **Anyone automating with headless pipelines** — CI/CD tasks, background codebase audits, or scripted multi-step jobs via `bun run headless`.
+* **People who may eventually want local/on-prem inference** — the `llm-pi-ai` provider layer makes swapping in Ollama, LM Studio, or vLLM a config change, not a rewrite (see the "Going Local" section of the [Customization Guide](docs/customization.md)).
+
+**Probably not the right fit if you need:**
+* Shared, multi-user, cloud-hosted state — DSH is a single-user, local-first workspace by design.
+* A zero-setup GUI chat app — DSH is a workbench you configure once via script, not a hosted product.
+* Native Windows without WSL2 — see [Windows Support](docs/windows.md) for the WSL2 path and what a native port would take.
+
+---
+
+## ⏱️ When to Reach for DSH
+
+**Reach for it when you want to:**
+* Prototype or compare across many models without opening a separate account for each.
+* Keep one private, growing library of your own skills/prompts that travels with you across projects.
+* Kick off an agent headlessly and walk away: `bun run headless "..."`.
+* Swap models or providers by editing YAML, not application code.
+
+**It's the wrong tool when you need:**
+* Guaranteed offline/local-only inference *out of the box* — OpenRouter is the default; going fully local is possible (see [docs/customization.md](docs/customization.md)) but is an extra step, not the initial state.
+* A production, multi-tenant backend — this is a personal dev workbench, not a hosted service.
+
+---
+
+## 🏛️ How It Works
+
+At a glance: an isolated, permission-locked credential store feeds a local Bun runtime engine, which serves three interchangeable interfaces and talks to OpenRouter and free web search upstream.
+
+📖 **Full diagram:** [docs/architecture.md](docs/architecture.md)
+
+### 🛒 Everything is a Plugin (`dshmarket` & `dsh-find-plugin`)
+
+In the **DeepSeek Harness** architecture, **everything is a plugin** — skills, MCP adapters, UI widgets, LLM providers, and agent loops. This workspace ships with a visual marketplace (`dshmarket`), natural-language plugin discovery (`dsh-find-plugin`), CLI plugin management, and a per-profile capability matrix.
+
+📖 **Full guide:** [docs/plugins.md](docs/plugins.md)
+
+### 🔍 Zero-Cost Web Search (`@liustack/modsearch`)
+
+This workspace replaces paid search APIs (Tavily, Bing, Google Search API) with **[`@liustack/modsearch`](https://www.npmjs.com/package/@liustack/modsearch)** — a zero-key, multi-engine search and scraping provider pre-wired into the runtime profile.
+
+📖 **Full guide:** [docs/search.md](docs/search.md)
+
+---
+
 ## ✨ Core Capabilities
 
 | Feature | Description |
@@ -54,30 +115,6 @@ If you want an AI workbench that's actually *yours* — local, inspectable, and 
 | 🔌 **Integrated MCP Hub** | Built-in Model Context Protocol panel (`dsh-mcp-panel`) with auto-discovery, trial execution console, and versioned backups. |
 | ⚙️ **Models Pro Configurator** | Dedicated Settings UI (`dsh-provider-model-configurator`) to tune context windows, max tokens, sampling parameters, and reasoning budgets. |
 | 🩺 **Non-Destructive Doctor** | Instant health diagnostics (`doctor.js`) validating runtime integrity, port bindings, permissions, and network connectivity. |
-
----
-
-## 🛒 Everything is a Plugin (`dshmarket` & `dsh-find-plugin`)
-
-In the **DeepSeek Harness** architecture, **everything is a plugin** — skills, MCP adapters, UI widgets, LLM providers, and agent loops. This workspace ships with a visual marketplace (`dshmarket`), natural-language plugin discovery (`dsh-find-plugin`), CLI plugin management, and a per-profile capability matrix.
-
-📖 **Full guide:** [docs/plugins.md](docs/plugins.md)
-
----
-
-## 🔍 Zero-Cost Web Search (`@liustack/modsearch`)
-
-This workspace replaces paid search APIs (Tavily, Bing, Google Search API) with **[`@liustack/modsearch`](https://www.npmjs.com/package/@liustack/modsearch)** — a zero-key, multi-engine search and scraping provider pre-wired into the runtime profile.
-
-📖 **Full guide:** [docs/search.md](docs/search.md)
-
----
-
-## 🏛️ System Architecture
-
-A diagram of the isolated credential store, the dual client interfaces (Web, TUI, Headless), the local Bun runtime engine, and the upstream OpenRouter/search infrastructure.
-
-📖 **Full diagram:** [docs/architecture.md](docs/architecture.md)
 
 ---
 
