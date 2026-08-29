@@ -18,7 +18,7 @@
 
 ---
 
-[🚀 Quick Start](#-quick-start-in-60-seconds) • [✨ Key Features](#-core-capabilities) • [🎨 Prompt Customization](CUSTOMIZATION.md) • [🛒 Plugin Store](#-everything-is-a-plugin-dshmarket--dsh-find-plugin) • [🧠 Skills](#-pre-configured-workspace-skills-skills) • [🔍 Free Search](#-zero-cost-web-search-modsearch) • [🏛️ Architecture](#%EF%B8%8F-system-architecture) • [🩺 Doctor](#-diagnostic-health-check) • [🛡️ Security](#-security--sandboxing)
+[🚀 Quick Start](#-quick-start-in-60-seconds) • [✨ Key Features](#-core-capabilities) • [🎨 Customization Guide](CUSTOMIZATION.md) • [🛒 Plugin Store](#-everything-is-a-plugin-dshmarket--dsh-find-plugin) • [🔍 Free Search](#-zero-cost-web-search-modsearch) • [🏛️ Architecture](#%EF%B8%8F-system-architecture) • [🩺 Doctor](#-diagnostic-health-check) • [🛡️ Security](#-security--sandboxing)
 
 ---
 
@@ -197,23 +197,14 @@ bun run reset
 
 ---
 
-## 🧠 Pre-Configured Workspace Skills (`./skills/`)
+## 🎨 Extensibility & Customization
 
-DeepSeek Harness natively auto-discovers all skill blueprints placed directly in the repository's `./skills/` directory (via `@deepseek-ai/dsh-skill-filesystem`).
+This workspace is designed to be fully customizable via conversational prompts, DSH plugins, and MCP servers:
 
-This workspace comes pre-loaded with standard engineering skills:
-
-| Skill | Description | Location |
-| :--- | :--- | :--- |
-| **`code-review`** | Multi-point review checklist covering correctness, security, leak prevention, and performance. | [`skills/code-review/SKILL.md`](skills/code-review/SKILL.md) |
-| **`git-standards`** | Conventional commits conventions, atomic commit practices, and branching strategies. | [`skills/git-standards/SKILL.md`](skills/git-standards/SKILL.md) |
-| **`api-design`** | RESTful URL naming patterns, standard error envelope formats, and schema design. | [`skills/api-design/SKILL.md`](skills/api-design/SKILL.md) |
-| **`tdd-workflow`** | Test-Driven Development (Red-Green-Refactor) loop with Bun test patterns. | [`skills/tdd-workflow/SKILL.md`](skills/tdd-workflow/SKILL.md) |
-
-> [!TIP]
-> **Need More Skills, Tools & Customizations?**  
-> Because **everything is a plugin in DSH**, you can discover and install additional community skills, MCP tools, and integrations on the fly using **`dshmarket`** in the Web UI or by prompting **`dsh-find-plugin`** in natural language.  
-> 📖 Read the full [**Prompt Customization Guide (CUSTOMIZATION.md)**](CUSTOMIZATION.md) for practical examples.
+* 🛒 **Community Plugins:** Install visual tools, sidebars, and models with 1-click via **`dshmarket`** in the Web UI.
+* 🔍 **Natural-Language Discovery:** Ask your agent in chat (*"Find a plugin for Docker / PostgreSQL"*) via **`dsh-find-plugin`**.
+* 🧠 **Custom Skills:** Add domain rules anytime by placing Markdown files in `./skills/<skill-name>/SKILL.md`.
+* 📖 **Learn More:** Check out the [**Customization Guide (CUSTOMIZATION.md)**](CUSTOMIZATION.md) for practical prompt recipes.
 
 ---
 
