@@ -18,7 +18,7 @@
 
 ---
 
-[🚀 Quick Start](#-quick-start-in-60-seconds) • [✨ Key Features](#-core-capabilities) • [🛒 Plugin Store](#-everything-is-a-plugin-dshmarket--dsh-find-plugin) • [🧠 Skills](#-pre-configured-workspace-skills-skills) • [🔍 Free Search](#-zero-cost-web-search-modsearch) • [🏛️ Architecture](#%EF%B8%8F-system-architecture) • [🩺 Doctor](#-diagnostic-health-check) • [🛡️ Security](#-security--sandboxing)
+[🚀 Quick Start](#-quick-start-in-60-seconds) • [✨ Key Features](#-core-capabilities) • [🎨 Prompt Customization](CUSTOMIZATION.md) • [🛒 Plugin Store](#-everything-is-a-plugin-dshmarket--dsh-find-plugin) • [🧠 Skills](#-pre-configured-workspace-skills-skills) • [🔍 Free Search](#-zero-cost-web-search-modsearch) • [🏛️ Architecture](#%EF%B8%8F-system-architecture) • [🩺 Doctor](#-diagnostic-health-check) • [🛡️ Security](#-security--sandboxing)
 
 ---
 
@@ -211,8 +211,9 @@ This workspace comes pre-loaded with standard engineering skills:
 | **`tdd-workflow`** | Test-Driven Development (Red-Green-Refactor) loop with Bun test patterns. | [`skills/tdd-workflow/SKILL.md`](skills/tdd-workflow/SKILL.md) |
 
 > [!TIP]
-> **Need More Skills & Tools?**  
-> Because **everything is a plugin in DSH**, you can discover and install additional community skills, MCP tools, and integrations on the fly using **`dshmarket`** in the Web UI or by prompting **`dsh-find-plugin`** in natural language.
+> **Need More Skills, Tools & Customizations?**  
+> Because **everything is a plugin in DSH**, you can discover and install additional community skills, MCP tools, and integrations on the fly using **`dshmarket`** in the Web UI or by prompting **`dsh-find-plugin`** in natural language.  
+> 📖 Read the full [**Prompt Customization Guide (CUSTOMIZATION.md)**](CUSTOMIZATION.md) for practical examples.
 
 ---
 
