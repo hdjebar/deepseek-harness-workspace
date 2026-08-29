@@ -229,7 +229,7 @@ This example is from a **local-mode** install (`./.dsh`, the default) — a `--g
 
 ✅ Bun runtime — bun 1.3.14
 ✅ Framework installed — @deepseek-ai/dsh 0.1.1-rc.2
-✅ Script bindings — web, cli, headless, sync-models, doctor
+✅ Script bindings — web, cli, headless, sync-models, doctor, reset, upgrade
 ✅ Folder permissions — ./.dsh (local workspace) mode 0700
 ✅ Credential permissions — ./.dsh (local workspace)/.credentials.yaml mode 0600
 ✅ OpenRouter key valid — source: ./.dsh (local workspace)/.credentials.yaml (managed store); limit: no spending limit

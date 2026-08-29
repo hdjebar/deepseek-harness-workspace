@@ -197,9 +197,9 @@ function checkWorkspace() {
     fail("Framework installed", "node_modules/@deepseek-ai/dsh missing — run: bun install");
   }
 
-  const required = ["web", "cli", "headless", "sync-models", "doctor"];
+  const required = ["web", "cli", "headless", "sync-models", "doctor", "reset", "upgrade"];
   const missing = required.filter((s) => !scripts[s]);
-  if (missing.length === 0) pass("Script bindings", "web, cli, headless, sync-models, doctor");
+  if (missing.length === 0) pass("Script bindings", required.join(", "));
   else warn("Script bindings", `missing in package.json: ${missing.join(", ")} — re-run ./setup-dsh.sh`);
 }
 
