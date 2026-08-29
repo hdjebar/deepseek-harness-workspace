@@ -234,6 +234,7 @@ Deep-dive guides live in [`docs/`](docs/):
 | Guide | Covers |
 | :--- | :--- |
 | [🎨 Customization](docs/customization.md) | Prompt-driven plugins, MCP servers, skills, model tuning, sandbox modes, headless pipelines |
+| [🎭 Personas](docs/personas.md) | Composing skills + plugins/MCP + model choice + automation into a role-specific setup, including what the native `workflow` tool actually is |
 | [🛒 Plugins & Marketplace](docs/plugins.md) | `dshmarket`, `dsh-find-plugin`, CLI plugin management, profile capability matrix |
 | [🔍 Free Web Search](docs/search.md) | `@liustack/modsearch` zero-cost search integration |
 | [🏛️ Architecture](docs/architecture.md) | System diagram — storage, interfaces, runtime, upstream infrastructure |
