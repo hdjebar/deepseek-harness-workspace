@@ -205,6 +205,15 @@ bun run reset            # Resets local ./.dsh workspace configuration and artif
 ./reset.sh --global      # Resets global ~/.dsh configuration only
 ```
 
+> [!TIP]
+> **Running Multiple Workspaces Simultaneously (Port Customization):**  
+> By default, DSH runs on port `3080`. To run a second workspace in parallel without collision, set `DSH_PORT`:  
+> ```bash
+> DSH_PORT=3081 bun run web      # Starts second workspace on http://127.0.0.1:3081
+> DSH_PORT=3081 bun run cli      # Attaches TUI matrix to port 3081
+> DSH_PORT=3081 bun run doctor   # Diagnoses port 3081
+> ```
+
 ---
 
 ## 🎨 Extensibility & Customization

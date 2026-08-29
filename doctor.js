@@ -211,16 +211,17 @@ function checkPlugins() {
 }
 
 async function checkPort() {
+  const port = process.env.DSH_PORT || process.env.PORT || "3080";
   try {
-    const res = await fetch("http://127.0.0.1:3080", { signal: AbortSignal.timeout(1500) });
-    info("Port 3080", `a web server is responding (HTTP ${res.status})`);
+    const res = await fetch(`http://127.0.0.1:${port}`, { signal: AbortSignal.timeout(1500) });
+    info(`Port ${port}`, `a web server is responding (HTTP ${res.status})`);
   } catch (err) {
     const cause = String(err?.cause?.code ?? err?.code ?? err?.message ?? "");
     const lower = cause.toLowerCase();
     if (lower.includes("econnrefused") || lower.includes("connectionrefused") || lower.includes("connection refused") || lower.includes("failed to connect")) {
-      info("Port 3080", "free — nothing listening");
+      info(`Port ${port}`, "free — nothing listening");
     } else {
-      warn("Port 3080", `probe failed: ${cause}`);
+      warn(`Port ${port}`, `probe failed: ${cause}`);
     }
   }
 }

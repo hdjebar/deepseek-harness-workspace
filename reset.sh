@@ -94,10 +94,11 @@ fi
 echo ""
 echo "🛑 [1/3] Terminating active DSH processes..."
 # Graceful termination (SIGTERM) followed by SIGKILL fallback
-if lsof -ti :3080 &>/dev/null; then
-    lsof -ti :3080 2>/dev/null | xargs kill -15 2>/dev/null || true
+TARGET_PORT="${DSH_PORT:-${PORT:-3080}}"
+if lsof -ti ":${TARGET_PORT}" &>/dev/null; then
+    lsof -ti ":${TARGET_PORT}" 2>/dev/null | xargs kill -15 2>/dev/null || true
     sleep 0.5
-    lsof -ti :3080 2>/dev/null | xargs kill -9 2>/dev/null || true
+    lsof -ti ":${TARGET_PORT}" 2>/dev/null | xargs kill -9 2>/dev/null || true
 fi
 pkill -15 -f "bun.*dsh" 2>/dev/null || true
 pkill -15 -f "dsh-tui" 2>/dev/null || true

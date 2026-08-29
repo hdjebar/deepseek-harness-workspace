@@ -133,6 +133,22 @@ bun run headless "Implement a dark-mode toggle for the navbar in src/components/
 
 ---
 
+## 7. 🌐 Multi-Workspace & Port Customization
+
+If you are running multiple DSH workspaces concurrently on the same host, use **`DSH_PORT`** to avoid port collisions:
+
+```bash
+# Workspace 1 (Runs on standard port 3080)
+bun run web
+
+# Workspace 2 (Runs on isolated port 3081)
+DSH_PORT=3081 bun run web
+DSH_PORT=3081 bun run cli
+DSH_PORT=3081 bun run doctor
+```
+
+---
+
 ## 📚 Quick Reference Summary
 
 | Goal | Method | Location / Command |
@@ -140,6 +156,7 @@ bun run headless "Implement a dark-mode toggle for the navbar in src/components/
 | **Add Plugins** | Prompt agent or use GUI Store | `dshmarket` in Web UI / `dsh-find-plugin` |
 | **Add MCP Servers** | Prompt agent or edit YAML | `dsh-mcp-panel` / `./.dsh/cordis.patch.yml` |
 | **Add Skills** | Prompt agent to write Markdown | `./skills/<name>/SKILL.md` |
+| **Custom Port** | Set environment variable | `DSH_PORT=3081 bun run web` |
 | **Sync Models** | Run sync command | `bun run sync-models` |
 | **Check Health** | Run diagnostic | `bun run doctor` |
 | **Reset Local Config** | Clean workspace setup | `bun run reset` |
