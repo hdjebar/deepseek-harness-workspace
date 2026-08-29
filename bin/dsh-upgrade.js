@@ -26,9 +26,13 @@ console.log("========================================");
 run("📦 [1/4] Upgrading framework (@deepseek-ai/dsh, dsh-tui) via bun update...", "bun", ["update"]);
 
 const profilesDir = path.join(dshHome, "profiles");
-const profiles = ["web", "headless"].filter((name) =>
-  fs.existsSync(path.join(profilesDir, name, "package.json"))
-);
+const profiles = fs.existsSync(profilesDir)
+  ? fs.readdirSync(profilesDir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      .filter((name) => fs.existsSync(path.join(profilesDir, name, "package.json")))
+      .sort()
+  : [];
 
 if (profiles.length === 0) {
   console.log(`\n🔌 [2/4] No provisioned profiles found under ${profilesDir} — skipping plugin upgrade.`);

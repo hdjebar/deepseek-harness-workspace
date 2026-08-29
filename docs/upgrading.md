@@ -25,9 +25,10 @@ git add bun.lock package.json && git commit -m "chore: upgrade DSH ecosystem"
 >
 > `bun update` genuinely cannot see plugins — they're not in this repo's `package.json` at all, and `pnpm`, not `bun`, manages that tree.
 
-Two situations need more than `bun run upgrade`:
+One situation needs more than `bun run upgrade`:
 * **Crossing a minor version boundary** (e.g. a future `0.2.0`): neither `bun update` nor `bun run upgrade` will cross it — use `bun add @deepseek-ai/dsh@<version> dsh-tui@<version>` instead, then `bun run upgrade` to pick up plugins/models/verification on top of that.
-* **A profile `bun run upgrade` doesn't know about**: it only checks the `web` and `headless` profiles (the two `setup-dsh.sh` provisions) — a custom profile needs `dsh plugin --profile <name> update` run manually, per §2 below.
+
+Any profile is covered, not just `web`/`headless` — `bun run upgrade` scans `<DSH_HOME>/profiles/` for every directory containing a `package.json` (any name, including a custom profile you set up by hand) and upgrades each one's plugins in turn.
 
 ---
 
@@ -46,7 +47,7 @@ Two situations need more than `bun run upgrade`:
 
 ## 2. Plugins (`dshmarket`, `dsh-mcp-panel`, `dsh-better-sidebar`, `dsh-find-plugin`, `@liustack/modsearch`)
 
-`bun run upgrade` already runs the CLI path below for the `web` and `headless` profiles automatically — this section is for a custom profile it doesn't know about, or for understanding what it's actually doing.
+`bun run upgrade` already runs the CLI path below for every provisioned profile automatically — this section is for understanding what it's actually doing, or for running it against a single profile by hand.
 
 Two ways, both real — verified against `@deepseek-ai/dsh`'s own README (`dsh plugin --profile <name> <pnpm args>`, described there as "manage a profile's plugins **by forwarding to pnpm** in the profile directory"):
 
