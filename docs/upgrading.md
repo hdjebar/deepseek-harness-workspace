@@ -11,11 +11,21 @@ bun run doctor         # verify nothing broke
 git add bun.lock package.json && git commit -m "chore: upgrade @deepseek-ai/dsh and dsh-tui"
 ```
 
-That's the whole routine case. **Don't re-run `setup-dsh.sh`** just to pick up a newer framework version — `bun update` alone already does that, since the runtime commands (`bun run web`/`cli`/`headless`) run whatever's in `node_modules` directly; `cordis.patch.yml` and the installed plugins aren't involved. Re-running `setup-dsh.sh` is a separate, riskier operation (see the warning at the bottom of this page) — only reach for it if you specifically want to regenerate config or reinstall plugins, and be ready to restore from `.bak` afterward.
+That's the whole routine case. **Don't re-run `setup-dsh.sh`** for either a framework or a plugin upgrade — `bun update` covers the framework, and `dsh plugin --profile <name> update` (§2 below) covers plugins; neither touches `cordis.patch.yml` or your credentials. Re-running `setup-dsh.sh` is a separate, riskier operation (see the warning at the bottom of this page) that's only actually needed to regenerate config from scratch or bootstrap a brand-new profile — not for routine upgrades of either kind.
+
+> [!IMPORTANT]
+> **`bun update` does not include plugins**, even though both are technically "npm packages." They're two disjoint dependency trees:
+> | | Framework (`@deepseek-ai/dsh`, `dsh-tui`) | Plugins (`dshmarket`, `dsh-mcp-panel`, ...) |
+> | :--- | :--- | :--- |
+> | Lives in | this repo's own `./node_modules` | `<DSH_HOME>/profiles/<name>/node_modules` — **inside the `.dsh` config folder**, not the repo |
+> | Package manager | `bun` (this repo's `package.json`/`bun.lock`) | `pnpm` (each profile has its own `pnpm-workspace.yaml`, written by `setup-dsh.sh`) |
+> | Upgrade command | `bun update` | `dsh plugin --profile <name> update` |
+>
+> `bun update` genuinely cannot see plugins — they're not in this repo's `package.json` at all, and `pnpm`, not `bun`, manages that tree. Run both commands if you want both upgraded.
 
 Two situations need more than the quick start:
 * **Crossing a minor version boundary** (e.g. a future `0.2.0`): `bun update` won't cross it — use `bun add @deepseek-ai/dsh@<version> dsh-tui@<version>` instead, then run the rest of the sequence above.
-* **Want newer plugins** (`dshmarket`, `dsh-mcp-panel`, etc.): those update through the dshmarket GUI, a separate mechanism from the framework code — see §2 below.
+* **Want newer plugins** (`dshmarket`, `dsh-mcp-panel`, etc.): `dsh plugin --profile <name> update` — see §2 below for the exact command.
 
 ---
 
@@ -34,7 +44,19 @@ Two situations need more than the quick start:
 
 ## 2. Plugins (`dshmarket`, `dsh-mcp-panel`, `dsh-better-sidebar`, `dsh-find-plugin`, `@liustack/modsearch`)
 
-Update these through the **dshmarket GUI** in the Web IDE — it's the one place this repo's own material describes update handling ("Browse, install, update, and toggle community plugins... with a single click," per the [Plugins guide](plugins.md)). Nothing in `setup-dsh.sh`, `reset.sh`, or `doctor.js` runs a CLI plugin-upgrade command — there isn't a documented `bunx @deepseek-ai/dsh plugin update` equivalent in this repo, so don't assume one exists without checking the installed CLI's own `--help`.
+Two ways, both real — verified against `@deepseek-ai/dsh`'s own README (`dsh plugin --profile <name> <pnpm args>`, described there as "manage a profile's plugins **by forwarding to pnpm** in the profile directory"):
+
+* **GUI**: the dshmarket store in the Web IDE ("Browse, install, update, and toggle community plugins... with a single click," per the [Plugins guide](plugins.md)).
+* **CLI**: `dsh plugin --profile <name> update` runs `pnpm update` inside that profile's `node_modules`, upgrading every installed plugin within its recorded version range — the same mechanism `setup-dsh.sh` uses to *install* them (`bunx @deepseek-ai/dsh plugin --profile web add ...`), just with `update` instead of `add`. Since the raw `dsh` CLI doesn't know this repo's `.dsh-target`/local-`.dsh` conventions (only `bin/dsh-web.js`/`dsh-cli.js`/`dsh-headless.js` resolve those), set `DSH_HOME` explicitly, matching `setup-dsh.sh`'s own pattern:
+  ```bash
+  # Local mode (the default)
+  DSH_HOME="$PWD/.dsh" bunx @deepseek-ai/dsh plugin --profile web update
+  DSH_HOME="$PWD/.dsh" bunx @deepseek-ai/dsh plugin --profile headless update
+
+  # Global mode
+  DSH_HOME="$HOME/.dsh" bunx @deepseek-ai/dsh plugin --profile web update
+  ```
+  This won't move `dsh-provider-model-configurator` past its pinned commit (see §3) — a git-commit dependency has no version range for `pnpm update` to bump.
 
 ---
 

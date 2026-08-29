@@ -25,13 +25,16 @@ flowchart LR
 * The agent queries GitHub topics and npm registries dynamically, presenting installable plugin recommendations.
 
 ### 3. CLI Plugin Management
-You can also add or remove plugins directly from your terminal per profile:
+`dsh plugin --profile <name> <pnpm args>` forwards whatever follows straight to `pnpm` inside that profile's directory — so `add`, `remove`, and `update` all just work, per profile. Set `DSH_HOME` explicitly (local-mode path shown; `setup-dsh.sh` does the same for the same reason — the raw `dsh` CLI doesn't know this repo's `.dsh-target`/local-`.dsh` conventions and defaults to `~/.dsh` otherwise):
 ```bash
 # Add a plugin to the web profile
-bunx @deepseek-ai/dsh plugin --profile web add <plugin-name>
+DSH_HOME="$PWD/.dsh" bunx @deepseek-ai/dsh plugin --profile web add <plugin-name>
 
 # Add a tool plugin to the headless profile
-bunx @deepseek-ai/dsh plugin --profile headless add <plugin-name>
+DSH_HOME="$PWD/.dsh" bunx @deepseek-ai/dsh plugin --profile headless add <plugin-name>
+
+# Upgrade every already-installed plugin in a profile (see docs/upgrading.md)
+DSH_HOME="$PWD/.dsh" bunx @deepseek-ai/dsh plugin --profile web update
 ```
 
 ### 4. Profile Capability Matrix
