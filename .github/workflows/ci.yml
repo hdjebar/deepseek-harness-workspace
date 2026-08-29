@@ -62,14 +62,33 @@ jobs:
             exit 1
           fi
 
-      - name: doctor.js fails on insecure credential permissions (0644)
+      - name: doctor.js validates credential permissions (fails on 0644, passes on 0600)
         run: |
           PERM_FIXTURE=/tmp/dsh-doctor-perm
+          rm -rf "$PERM_FIXTURE"
           mkdir -p "$PERM_FIXTURE/.dsh"
-          echo "refs: { OPENROUTER_API_KEY: 'sk-or-test' }" > "$PERM_FIXTURE/.dsh/.credentials.yaml"
+          chmod 700 "$PERM_FIXTURE/.dsh"
+          cp "$FIXTURE_HOME/.dsh/cordis.patch.yml" "$PERM_FIXTURE/.dsh/cordis.patch.yml"
+          echo "llm-pi-ai: { providers: { openrouter: {} } }" > "$PERM_FIXTURE/.dsh/settings.yaml"
+          cat << 'EOF' > "$PERM_FIXTURE/.dsh/.credentials.yaml"
+          version: 1
+          refs:
+            OPENROUTER_API_KEY: "sk-or-v1-test-token"
+          EOF
+
+          # Case 1: chmod 644 must trigger fatal permission failure
           chmod 644 "$PERM_FIXTURE/.dsh/.credentials.yaml"
-          if DSH_HOME="$PERM_FIXTURE/.dsh" bun doctor.js; then
-            echo "::error::doctor.js should fail when credentials have mode 0644"
+          OUTPUT_644="$(DSH_HOME="$PERM_FIXTURE/.dsh" bun doctor.js 2>&1 || true)"
+          if ! echo "$OUTPUT_644" | grep -q "fatal: must be 0600"; then
+            echo "::error::doctor.js should fail with fatal permission check on 0644"
+            exit 1
+          fi
+
+          # Case 2: chmod 600 must pass permission check
+          chmod 600 "$PERM_FIXTURE/.dsh/.credentials.yaml"
+          OUTPUT_600="$(DSH_HOME="$PERM_FIXTURE/.dsh" bun doctor.js 2>&1 || true)"
+          if ! echo "$OUTPUT_600" | grep -q "mode 0600"; then
+            echo "::error::doctor.js should verify mode 0600"
             exit 1
           fi
 

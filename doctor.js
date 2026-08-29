@@ -20,6 +20,16 @@ function resolveDshDir() {
     if (raw.startsWith("~")) raw = path.join(os.homedir(), raw.slice(1));
     return path.resolve(raw);
   }
+  const targetFile = path.join(process.cwd(), ".dsh-target");
+  if (fs.existsSync(targetFile)) {
+    try {
+      let content = fs.readFileSync(targetFile, "utf8").trim();
+      if (content) {
+        if (content.startsWith("~")) content = path.join(os.homedir(), content.slice(1));
+        return path.resolve(process.cwd(), content);
+      }
+    } catch { /* ignore read failure */ }
+  }
   const localDir = path.join(process.cwd(), ".dsh");
   const localConfig = fs.existsSync(path.join(localDir, "cordis.patch.yml")) || fs.existsSync(path.join(localDir, ".credentials.yaml"));
   const globalDir = path.join(os.homedir(), ".dsh");
@@ -96,7 +106,12 @@ function resolveKey() {
 
   const credDoc = readIfExists(path.join(HOME_DSH, ".credentials.yaml"));
   if (credDoc) {
-    const mRefs = credDoc.match(/^\s*(?:refs\s*:\s*\n)?\s*OPENROUTER_API_KEY\s*:\s*["']?([^\s"'\r\n]+)["']?/m);
+    const verMatch = credDoc.match(/^\s*version:\s*(\d+)/m);
+    if (verMatch && parseInt(verMatch[1], 10) !== 1) {
+      fail("Credential schema", `${DISPLAY_TARGET}/.credentials.yaml has unsupported schema version ${verMatch[1]} (runtime requires version: 1)`);
+      return null;
+    }
+    const mRefs = credDoc.match(/^\s*(?:refs:\s*\n)?\s*OPENROUTER_API_KEY:\s*["']?([^\s"'\r\n]+)["']?/m);
     if (mRefs) return { key: mRefs[1], source: `${DISPLAY_TARGET}/.credentials.yaml (managed store)` };
   }
 

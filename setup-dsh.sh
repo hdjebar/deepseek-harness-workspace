@@ -40,7 +40,9 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-[ -t 1 ] && clear 2>/dev/null || true
+if [ -t 1 ]; then
+    clear 2>/dev/null || true
+fi
 echo "=========================================================================="
 echo "    DEEPSEEK HARNESS (DSH) MASTER PRODUCTION ENV BOOTSTRAP                "
 echo "    [OpenRouter + Free Search + VSCode UX + TUI Matrix + Models Pro]      "
@@ -52,9 +54,15 @@ DSH_DIR="$(cd "${DSH_TARGET}" 2>/dev/null && pwd || echo "${DSH_TARGET}")"
 export DSH_HOME="${DSH_DIR}"
 
 if [ "${DSH_DIR}" = "$HOME/.dsh" ]; then
+    rm -f .dsh-target
     echo "📁 DSH Configuration Target: ~/.dsh (Global Mode)"
 else
-    echo "📁 DSH Configuration Target: ${DSH_DIR} (Local Workspace Mode)"
+    if [[ "${DSH_DIR}" == "$PWD"/* ]]; then
+        printf './%s\n' "${DSH_DIR#$PWD/}" > .dsh-target
+    else
+        printf '%s\n' "${DSH_DIR}" > .dsh-target
+    fi
+    echo "📁 DSH Configuration Target: ${DSH_DIR} (Workspace Mode)"
 fi
 echo ""
 
@@ -88,6 +96,7 @@ fi
 
 # 3b. Remote Gate: validate the key against OpenRouter before anything is written
 echo "🔑 Validating key against the OpenRouter API..."
+# shellcheck disable=SC2016
 KEY_STATUS="$(
   OR_KEY="${OR_KEY}" bun -e '
     try {
@@ -293,15 +302,27 @@ async function syncOpenRouterModels() {
     if (raw.startsWith("~")) raw = path.join(os.homedir(), raw.slice(1));
     dshDir = path.resolve(raw);
   } else {
-    const localDir = path.join(process.cwd(), ".dsh");
-    const localPatch = fs.existsSync(path.join(localDir, "cordis.patch.yml"));
-    const globalDir = path.join(os.homedir(), ".dsh");
-    const globalPatch = fs.existsSync(path.join(globalDir, "cordis.patch.yml"));
+    const targetFile = path.join(process.cwd(), ".dsh-target");
+    if (fs.existsSync(targetFile)) {
+      try {
+        let content = fs.readFileSync(targetFile, "utf8").trim();
+        if (content) {
+          if (content.startsWith("~")) content = path.join(os.homedir(), content.slice(1));
+          dshDir = path.resolve(process.cwd(), content);
+        }
+      } catch { /* ignore read failure */ }
+    }
+    if (!dshDir) {
+      const localDir = path.join(process.cwd(), ".dsh");
+      const localPatch = fs.existsSync(path.join(localDir, "cordis.patch.yml"));
+      const globalDir = path.join(os.homedir(), ".dsh");
+      const globalPatch = fs.existsSync(path.join(globalDir, "cordis.patch.yml"));
 
-    if (localPatch) dshDir = localDir;
-    else if (globalPatch) dshDir = globalDir;
-    else if (fs.existsSync(localDir)) dshDir = localDir;
-    else dshDir = globalDir;
+      if (localPatch) dshDir = localDir;
+      else if (globalPatch) dshDir = globalDir;
+      else if (fs.existsSync(localDir)) dshDir = localDir;
+      else dshDir = globalDir;
+    }
   }
 
   const patchPath = path.join(dshDir, "cordis.patch.yml");
@@ -350,18 +371,15 @@ fi
 # 11. Programmatically bind scripts using 100% Bun Execution
 echo "📌 Writing runtime script bindings to your local package.json..."
 bun pm trust --all || true
+# shellcheck disable=SC2016
 bun -e '
   const fs = require("fs");
-  const path = require("path");
   const p = JSON.parse(fs.readFileSync("package.json", "utf8"));
-  const target = process.env.DSH_HOME || path.join(process.cwd(), ".dsh");
-  const isGlobal = target === path.join(process.env.HOME || "", ".dsh");
-  const prefix = isGlobal ? "" : `DSH_HOME="${target}" `;
   p.scripts = {
     ...p.scripts,
-    web: prefix + "bun run bin/dsh-web.js",
-    cli: prefix + "bun run bin/dsh-cli.js",
-    headless: prefix + "dsh --profile headless",
+    web: "bun run bin/dsh-web.js",
+    cli: "bun run bin/dsh-cli.js",
+    headless: "bun run bin/dsh-headless.js",
     "sync-models": "bun run sync-models.js",
     ...(fs.existsSync("doctor.js") ? { doctor: "bun doctor.js" } : {}),
     ...(fs.existsSync("reset.sh") ? { reset: "bash reset.sh" } : {})

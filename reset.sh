@@ -91,30 +91,55 @@ if [ "$FORCE" = false ]; then
     fi
 fi
 
+is_dsh_process() {
+    local pid="$1"
+    if [[ ! "$pid" =~ ^[0-9]+$ ]] || [ "$pid" -le 1 ]; then
+        return 1
+    fi
+    if ! kill -0 "$pid" 2>/dev/null; then
+        return 1
+    fi
+    local cmd
+    cmd="$(ps -p "$pid" -o command= 2>/dev/null || ps -p "$pid" -o args= 2>/dev/null || true)"
+    if [[ "$cmd" =~ dsh || "$cmd" =~ @deepseek-ai/dsh || "$cmd" =~ dsh-tui || "$cmd" =~ dsh-web || "$cmd" =~ dsh-cli || "$cmd" =~ dsh-headless ]]; then
+        return 0
+    fi
+    return 1
+}
+
+kill_pid_safely() {
+    local pid="$1"
+    if is_dsh_process "$pid"; then
+        kill -15 "$pid" 2>/dev/null || true
+        sleep 0.3
+        if kill -0 "$pid" 2>/dev/null; then
+            kill -9 "$pid" 2>/dev/null || true
+        fi
+    fi
+}
+
 echo ""
 echo "🛑 [1/3] Terminating active DSH processes on target port..."
 TARGET_PORT="${DSH_PORT:-${PORT:-3080}}"
 if command -v lsof >/dev/null 2>&1; then
     PIDS="$(lsof -ti ":${TARGET_PORT}" 2>/dev/null || true)"
     if [ -n "$PIDS" ]; then
-        echo "$PIDS" | xargs kill -15 2>/dev/null || true
-        sleep 0.5
-        STILL_ALIVE="$(lsof -ti ":${TARGET_PORT}" 2>/dev/null || true)"
-        if [ -n "$STILL_ALIVE" ]; then
-            echo "$STILL_ALIVE" | xargs kill -9 2>/dev/null || true
-        fi
+        for pid in $PIDS; do
+            kill_pid_safely "$pid"
+        done
     fi
+    echo "✅ Active DSH processes on port ${TARGET_PORT} terminated."
+else
+    echo "ℹ️  'lsof' not found — skipped port inspection."
 fi
+
 if [ -f "${REAL_TARGET}/dsh.pid" ]; then
     PID="$(cat "${REAL_TARGET}/dsh.pid" 2>/dev/null || true)"
-    if [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null; then
-        kill -15 "$PID" 2>/dev/null || true
-        sleep 0.2
-        kill -9 "$PID" 2>/dev/null || true
+    if [[ "$PID" =~ ^[0-9]+$ ]] && [ "$PID" -gt 1 ]; then
+        kill_pid_safely "$PID"
     fi
     rm -f "${REAL_TARGET}/dsh.pid"
 fi
-echo "✅ Active processes on port ${TARGET_PORT} terminated."
 
 echo "🧹 [2/3] Removing configuration directory: ${REAL_TARGET}..."
 rm -rf "${REAL_TARGET}"
@@ -122,7 +147,7 @@ echo "✅ Configuration purged."
 
 if [ "$IS_LOCAL_MODE" = true ]; then
     echo "🗑️  [3/3] Cleaning local workspace artifacts (node_modules, caches, logs)..."
-    rm -rf node_modules .dsh *.log
+    rm -rf node_modules .dsh ./*.log
     echo "✅ Local workspace cleaned."
 else
     echo "🗑️  [3/3] Target configuration reset complete."
