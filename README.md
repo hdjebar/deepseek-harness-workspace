@@ -156,6 +156,9 @@ chmod +x setup-dsh.sh
 > [!TIP]
 > **Local by Default:** Configurations, credentials, and plugins are stored in `./.dsh` (already ignored by `.gitignore`). You can have multiple distinct DSH workspaces on the same machine without any cross-project conflicts!
 
+> [!TIP]
+> **Resetting a `--dir` workspace:** `setup-dsh.sh --dir` writes the custom path into a `.dsh-target` marker in the current directory, so a later plain `./reset.sh` run from that same directory will usually find it automatically. But to reset it deterministically — immune to the `$DSH_HOME` issue below — pass the same path explicitly: `./reset.sh --dir /path/to/dsh-config`. `--dir` is `reset.sh`'s highest-precedence option, above even `--global` and `$DSH_HOME`.
+
 > [!WARNING]
 > **This "local by default" only holds if `DSH_HOME` isn't already set in your shell.** Both `setup-dsh.sh` and `reset.sh` check `$DSH_HOME` *before* falling back to `./.dsh` — an env var left over from a previous `--global` run, a wrapper script, or an inherited CI variable silently overrides the local default, with no flag needed to trigger it. Both scripts print the resolved target path before acting (`📁 DSH Configuration Target: ...`) — check it, especially before `./reset.sh`, since `DSH_HOME` outranks even the `.dsh-target` marker file there. Run `echo $DSH_HOME` first if you're unsure what a bare command will target.
 
@@ -181,8 +184,9 @@ bun run sync-models
 bun run doctor
 
 # 🧹 6. Clean Slate Workspace Reset
-bun run reset            # Resets local ./.dsh workspace configuration and artifacts
-./reset.sh --global      # Resets global ~/.dsh configuration only
+bun run reset                              # Resets local ./.dsh workspace configuration and artifacts
+./reset.sh --global                        # Resets global ~/.dsh configuration only
+./reset.sh --dir /path/to/dsh-config       # Resets a custom-directory workspace (see the --dir tip above)
 ```
 
 > [!TIP]

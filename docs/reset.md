@@ -27,6 +27,9 @@ bun run reset
 # Reset global ~/.dsh configuration
 ./reset.sh --global
 
+# Reset a workspace installed with `setup-dsh.sh --dir <path>`
+./reset.sh --dir /path/to/dsh-config
+
 # Non-interactive force reset (for CI or automation)
 ./reset.sh --force
 ```
@@ -38,6 +41,8 @@ The reset script safely:
 
 > [!WARNING]
 > **Target resolution order is `--dir` → `--global` → `$DSH_HOME` → the `.dsh-target` marker file → local `./.dsh`.** If `DSH_HOME` is already set in your shell (left over from testing `--global` elsewhere, a wrapper script, an inherited CI variable), a bare `./reset.sh` targets *that* directory instead of the project you're standing in — silently, with no `--global` flag needed. It outranks even the `.dsh-target` marker, so don't assume "no flags = only this project's `./.dsh`" without first checking the printed `📁 DSH Configuration Target: ...` line (or `echo $DSH_HOME`).
+>
+> `--dir` is the one exception — it's the highest-precedence option, above `--global` and `$DSH_HOME`, so `./reset.sh --dir <path>` deterministically targets that path regardless of what's in your environment. If you installed with `setup-dsh.sh --dir`, passing `--dir` again to `reset.sh` is the reliable way to reset it; relying on the auto-written `.dsh-target` marker (a bare `./reset.sh` from the same directory) works too, but inherits the same `$DSH_HOME` caveat as everything below it in the precedence order.
 
 *To reinstall and configure fresh after reset, simply run `./setup-dsh.sh`.*
 
