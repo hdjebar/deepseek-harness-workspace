@@ -2,6 +2,21 @@
 
 DSH is a bootstrap/config layer around a large family of `@deepseek-ai/dsh-*` packages (see [What is DSH?](../README.md#-what-is-dsh)). "Upgrading" isn't one operation — it's four different ones, with different mechanics and different risk. This page covers each, verified against the actual package registry and `setup-dsh.sh`'s real behavior rather than assumed.
 
+## Quick start: the routine upgrade
+
+```bash
+bun update            # picks up newer @deepseek-ai/dsh / dsh-tui within the existing ^ range
+bun run sync-models    # refresh the model catalog — separate concern, always safe/idempotent
+bun run doctor         # verify nothing broke
+git add bun.lock package.json && git commit -m "chore: upgrade @deepseek-ai/dsh and dsh-tui"
+```
+
+That's the whole routine case. **Don't re-run `setup-dsh.sh`** just to pick up a newer framework version — `bun update` alone already does that, since the runtime commands (`bun run web`/`cli`/`headless`) run whatever's in `node_modules` directly; `cordis.patch.yml` and the installed plugins aren't involved. Re-running `setup-dsh.sh` is a separate, riskier operation (see the warning at the bottom of this page) — only reach for it if you specifically want to regenerate config or reinstall plugins, and be ready to restore from `.bak` afterward.
+
+Two situations need more than the quick start:
+* **Crossing a minor version boundary** (e.g. a future `0.2.0`): `bun update` won't cross it — use `bun add @deepseek-ai/dsh@<version> dsh-tui@<version>` instead, then run the rest of the sequence above.
+* **Want newer plugins** (`dshmarket`, `dsh-mcp-panel`, etc.): those update through the dshmarket GUI, a separate mechanism from the framework code — see §2 below.
+
 ---
 
 ## 1. The framework (`@deepseek-ai/dsh`, `dsh-tui`)
