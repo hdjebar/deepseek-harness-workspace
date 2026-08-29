@@ -354,7 +354,8 @@ bun -e '
     headless: "bun run bin/dsh-headless.js",
     "sync-models": "bun run sync-models.js",
     ...(fs.existsSync("doctor.js") ? { doctor: "bun doctor.js" } : {}),
-    ...(fs.existsSync("reset.sh") ? { reset: "bash reset.sh" } : {})
+    ...(fs.existsSync("reset.sh") ? { reset: "bash reset.sh" } : {}),
+    ...(fs.existsSync("bin/dsh-upgrade.js") ? { upgrade: "bun run bin/dsh-upgrade.js" } : {})
   };
   fs.writeFileSync("package.json", JSON.stringify(p, null, 2));
 '
@@ -373,4 +374,5 @@ echo "➡️ To resync live OpenRouter models (LOV):      bun run sync-models"
 echo "➡️ To invoke the Headless background pipeline:  bun run headless \"Your task\""
 echo "➡️ To run the read-only health check:          bun run doctor"
 echo "➡️ To completely wipe & reset the workspace:   bun run reset"
+echo "➡️ To upgrade the framework, plugins & models:  bun run upgrade"
 echo "--------------------------------------------------------"

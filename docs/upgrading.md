@@ -5,27 +5,29 @@ DSH is a bootstrap/config layer around a large family of `@deepseek-ai/dsh-*` pa
 ## Quick start: the routine upgrade
 
 ```bash
-bun update            # picks up newer @deepseek-ai/dsh / dsh-tui within the existing ^ range
-bun run sync-models    # refresh the model catalog — separate concern, always safe/idempotent
-bun run doctor         # verify nothing broke
-git add bun.lock package.json && git commit -m "chore: upgrade @deepseek-ai/dsh and dsh-tui"
+bun run upgrade
 ```
 
-That's the whole routine case. **Don't re-run `setup-dsh.sh`** for either a framework or a plugin upgrade — `bun update` covers the framework, and `dsh plugin --profile <name> update` (§2 below) covers plugins; neither touches `cordis.patch.yml` or your credentials. Re-running `setup-dsh.sh` is a separate, riskier operation (see the warning at the bottom of this page) that's only actually needed to regenerate config from scratch or bootstrap a brand-new profile — not for routine upgrades of either kind.
+One command, chaining everything below in order: `bun update` (framework) → `dsh plugin --profile <name> update` for each provisioned profile (plugins) → `bun run sync-models` (model catalog) → `bun run doctor` (verify). It stops immediately if any step fails, so a broken step never masks itself behind a later "success." Finish by committing the regenerated lockfile:
+```bash
+git add bun.lock package.json && git commit -m "chore: upgrade DSH ecosystem"
+```
+
+**Don't re-run `setup-dsh.sh`** for a routine upgrade — `bun run upgrade` covers both the framework and plugins without touching `cordis.patch.yml` or your credentials. Re-running `setup-dsh.sh` is a separate, riskier operation (see the warning at the bottom of this page) that's only actually needed to regenerate config from scratch or bootstrap a brand-new profile.
 
 > [!IMPORTANT]
-> **`bun update` does not include plugins**, even though both are technically "npm packages." They're two disjoint dependency trees:
+> **`bun update` alone does not include plugins**, even though both are technically "npm packages" — that's exactly why `bun run upgrade` runs both as separate steps rather than assuming one covers the other. They're two disjoint dependency trees:
 > | | Framework (`@deepseek-ai/dsh`, `dsh-tui`) | Plugins (`dshmarket`, `dsh-mcp-panel`, ...) |
 > | :--- | :--- | :--- |
 > | Lives in | this repo's own `./node_modules` | `<DSH_HOME>/profiles/<name>/node_modules` — **inside the `.dsh` config folder**, not the repo |
 > | Package manager | `bun` (this repo's `package.json`/`bun.lock`) | `pnpm` (each profile has its own `pnpm-workspace.yaml`, written by `setup-dsh.sh`) |
 > | Upgrade command | `bun update` | `dsh plugin --profile <name> update` |
 >
-> `bun update` genuinely cannot see plugins — they're not in this repo's `package.json` at all, and `pnpm`, not `bun`, manages that tree. Run both commands if you want both upgraded.
+> `bun update` genuinely cannot see plugins — they're not in this repo's `package.json` at all, and `pnpm`, not `bun`, manages that tree.
 
-Two situations need more than the quick start:
-* **Crossing a minor version boundary** (e.g. a future `0.2.0`): `bun update` won't cross it — use `bun add @deepseek-ai/dsh@<version> dsh-tui@<version>` instead, then run the rest of the sequence above.
-* **Want newer plugins** (`dshmarket`, `dsh-mcp-panel`, etc.): `dsh plugin --profile <name> update` — see §2 below for the exact command.
+Two situations need more than `bun run upgrade`:
+* **Crossing a minor version boundary** (e.g. a future `0.2.0`): neither `bun update` nor `bun run upgrade` will cross it — use `bun add @deepseek-ai/dsh@<version> dsh-tui@<version>` instead, then `bun run upgrade` to pick up plugins/models/verification on top of that.
+* **A profile `bun run upgrade` doesn't know about**: it only checks the `web` and `headless` profiles (the two `setup-dsh.sh` provisions) — a custom profile needs `dsh plugin --profile <name> update` run manually, per §2 below.
 
 ---
 
@@ -43,6 +45,8 @@ Two situations need more than the quick start:
 ---
 
 ## 2. Plugins (`dshmarket`, `dsh-mcp-panel`, `dsh-better-sidebar`, `dsh-find-plugin`, `@liustack/modsearch`)
+
+`bun run upgrade` already runs the CLI path below for the `web` and `headless` profiles automatically — this section is for a custom profile it doesn't know about, or for understanding what it's actually doing.
 
 Two ways, both real — verified against `@deepseek-ai/dsh`'s own README (`dsh plugin --profile <name> <pnpm args>`, described there as "manage a profile's plugins **by forwarding to pnpm** in the profile directory"):
 

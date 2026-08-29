@@ -188,15 +188,13 @@ bun run reset                              # Resets local ./.dsh workspace confi
 ./reset.sh --global                        # Resets global ~/.dsh configuration only
 ./reset.sh --dir /path/to/dsh-config       # Resets a custom-directory workspace (see the --dir tip above)
 
-# 🔄 7. Upgrade the framework (see docs/upgrading.md for details and gotchas)
-bun update
-bun run sync-models
-bun run doctor
-git add bun.lock package.json && git commit -m "chore: upgrade @deepseek-ai/dsh and dsh-tui"
+# 🔄 7. Upgrade the framework, plugins & model catalog in one shot
+bun run upgrade
+git add bun.lock package.json && git commit -m "chore: upgrade DSH ecosystem"
 ```
 
 > [!NOTE]
-> This is the routine case only — crossing a minor version boundary, upgrading plugins, or upgrading the git-commit-pinned `dsh-provider-model-configurator` each work differently, and re-running `setup-dsh.sh` for any of this will overwrite your customizations. See [docs/upgrading.md](docs/upgrading.md) for the full picture.
+> `bun run upgrade` already covers the framework, the `web`/`headless` plugins, and the model catalog in one command — this is the routine case. Crossing a minor version boundary, a custom profile it doesn't know about, or the git-commit-pinned `dsh-provider-model-configurator` each need a manual step instead, and re-running `setup-dsh.sh` for any of this will overwrite your customizations. See [docs/upgrading.md](docs/upgrading.md) for the full picture.
 
 > [!TIP]
 > **Running Multiple Workspaces Simultaneously (Port Customization):**  
