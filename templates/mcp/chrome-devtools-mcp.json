@@ -1,7 +1,0 @@
-{
-  "name": "chrome-devtools-mcp",
-  "displayName": "Chrome DevTools MCP Server",
-  "description": "Control browser sessions, capture network traffic, inspect DOM elements, and audit accessibility",
-  "command": "npx",
-  "args": ["-y", "chrome-devtools-mcp@latest"]
-}

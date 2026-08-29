@@ -18,7 +18,7 @@
 
 ---
 
-[🚀 Quick Start](#-quick-start-in-60-seconds) • [✨ Key Features](#-core-capabilities) • [🛒 Plugin Store & Skills](#-everything-is-a-plugin-dshmarket--dsh-find-plugin) • [🔍 Free Search](#-zero-cost-web-search-modsearch) • [🏛️ Architecture](#%EF%B8%8F-system-architecture) • [🎭 Templates](#-persona--skill-templates) • [🩺 Doctor](#-diagnostic-health-check) • [🛡️ Security](#-security--sandboxing)
+[🚀 Quick Start](#-quick-start-in-60-seconds) • [✨ Key Features](#-core-capabilities) • [🛒 Plugin Store](#-everything-is-a-plugin-dshmarket--dsh-find-plugin) • [🧠 Skills](#-pre-configured-workspace-skills-skills) • [🔍 Free Search](#-zero-cost-web-search-modsearch) • [🏛️ Architecture](#%EF%B8%8F-system-architecture) • [🩺 Doctor](#-diagnostic-health-check) • [🛡️ Security](#-security--sandboxing)
 
 ---
 
@@ -168,58 +168,37 @@ bun run web
 # ⌨️ 2. Launch the High-Performance Keyboard Terminal Matrix
 bun run cli
 
-# 🎭 3. Switch Persona & Activate Skills
-bun run template
-bun run template fullstack-dev
-
-# 🤖 4. Execute a Headless Agent Automation Pipeline
+# 🤖 3. Execute a Headless Agent Automation Pipeline
 bun run headless "Audit this repository and suggest architecture optimizations"
 
-# 🔄 5. Synchronize Live Models from OpenRouter
+# 🔄 4. Synchronize Live Models from OpenRouter
 bun run sync-models
 
-# 🩺 6. Run the Workspace Health Diagnostic
+# 🩺 5. Run the Workspace Health Diagnostic
 bun run doctor
 
-# 🧹 7. Complete Workspace & Global Reset
+# 🧹 6. Complete Workspace & Global Reset
 bun run reset
 ```
 
 ---
 
-## 🎭 Persona & Skill Templates
+## 🧠 Pre-Configured Workspace Skills (`./skills/`)
 
-This workspace includes curated persona profiles, domain skills, and MCP configurations in [`templates/`](templates/):
+DeepSeek Harness natively auto-discovers all skill blueprints placed directly in the repository's `./skills/` directory (via `@deepseek-ai/dsh-skill-filesystem`).
 
-| Persona | Key Domain & Focus | Default Model | Bundled Skills |
-| :--- | :--- | :--- | :--- |
-| **`fullstack-dev`** | TypeScript, Bun, React/Next.js, Node, REST/GraphQL, Testing | `deepseek/deepseek-chat` | `code-review`, `api-design`, `tdd-workflow`, `git-standards` |
-| **`software-architect`** | High-level system design, domain modeling, ADRs, Mermaid diagrams | `deepseek/deepseek-r1` | `api-design`, `code-review`, `git-standards` |
-| **`security-auditor`** | Vulnerability discovery, static analysis, secret protection, sandboxing | `deepseek/deepseek-r1` | `code-review`, `git-standards` |
-| **`devops-engineer`** | Docker, Kubernetes, CI/CD pipelines, defensive shell scripting | `deepseek/deepseek-chat` | `git-standards`, `code-review` |
+This workspace comes pre-loaded with standard engineering skills:
 
-### How to Apply a Persona:
-```bash
-# List all available personas interactively
-bun run template
-
-# Switch to a specific persona
-bun run template fullstack-dev
-bun run template software-architect
-```
-
-### 📁 Understanding `templates/skills/` vs `./skills/`
-
-| Directory | Purpose | Managed By |
+| Skill | Description | Location |
 | :--- | :--- | :--- |
-| **`templates/skills/`** | **Master Versioned Catalog:** Stores all available skill blueprints in Git (`code-review`, `api-design`, `git-standards`, `tdd-workflow`). | Git / Repository |
-| **`./skills/`** | **Active Runtime Directory:** Contains only the skills actively linked for the currently selected persona. DSH agents read this folder during sessions. | `bun run template` / `.gitignore` |
+| **`code-review`** | Multi-point review checklist covering correctness, security, leak prevention, and performance. | [`skills/code-review/SKILL.md`](skills/code-review/SKILL.md) |
+| **`git-standards`** | Conventional commits conventions, atomic commit practices, and branching strategies. | [`skills/git-standards/SKILL.md`](skills/git-standards/SKILL.md) |
+| **`api-design`** | RESTful URL naming patterns, standard error envelope formats, and schema design. | [`skills/api-design/SKILL.md`](skills/api-design/SKILL.md) |
+| **`tdd-workflow`** | Test-Driven Development (Red-Green-Refactor) loop with Bun test patterns. | [`skills/tdd-workflow/SKILL.md`](skills/tdd-workflow/SKILL.md) |
 
-```mermaid
-flowchart LR
-    CATALOG["📚 Master Catalog\n(templates/skills/)"] -->|bun run template <id>| ACTIVE["⚡ Active Runtime Skills\n(./skills/)"]
-    ACTIVE -->|Loaded by| AGENT["🤖 DSH AI Agent\n(Web IDE / TUI / Headless)"]
-```
+> [!TIP]
+> **Need More Skills & Tools?**  
+> Because **everything is a plugin in DSH**, you can discover and install additional community skills, MCP tools, and integrations on the fly using **`dshmarket`** in the Web UI or by prompting **`dsh-find-plugin`** in natural language.
 
 ---
 
