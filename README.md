@@ -171,6 +171,19 @@ bun run template fullstack-dev
 bun run template software-architect
 ```
 
+### 📁 Understanding `templates/skills/` vs `./skills/`
+
+| Directory | Purpose | Managed By |
+| :--- | :--- | :--- |
+| **`templates/skills/`** | **Master Versioned Catalog:** Stores all available skill blueprints in Git (`code-review`, `api-design`, `git-standards`, `tdd-workflow`). | Git / Repository |
+| **`./skills/`** | **Active Runtime Directory:** Contains only the skills actively linked for the currently selected persona. DSH agents read this folder during sessions. | `bun run template` / `.gitignore` |
+
+```mermaid
+flowchart LR
+    CATALOG["📚 Master Catalog\n(templates/skills/)"] -->|bun run template <id>| ACTIVE["⚡ Active Runtime Skills\n(./skills/)"]
+    ACTIVE -->|Loaded by| AGENT["🤖 DSH AI Agent\n(Web IDE / TUI / Headless)"]
+```
+
 ---
 
 ## 🩺 Diagnostic Health Check

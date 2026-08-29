@@ -16,4 +16,5 @@ pnpm-lock.yaml
 
 # Local DSH runtime & cache
 .dsh/
+skills/
 *.log

@@ -35,8 +35,8 @@ echo "🧹 [2/3] Removing global ~/.dsh directory (credentials, profiles, patche
 rm -rf "$HOME/.dsh"
 echo "✅ Global configuration purged."
 
-echo "🗑️  [3/3] Cleaning local workspace artifacts (node_modules, caches, logs)..."
-rm -rf node_modules .dsh *.log /tmp/dsh-*
+echo "🗑️  [3/3] Cleaning local workspace artifacts (node_modules, skills, caches, logs)..."
+rm -rf node_modules skills .dsh *.log /tmp/dsh-*
 echo "✅ Local workspace cleaned."
 
 echo ""
