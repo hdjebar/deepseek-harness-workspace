@@ -6,7 +6,9 @@ import os from "node:os";
 async function syncOpenRouterModels() {
   console.log("🌐 Fetching live model catalog from OpenRouter API (https://openrouter.ai/api/v1/models)...");
   
-  const res = await fetch("https://openrouter.ai/api/v1/models");
+  const res = await fetch("https://openrouter.ai/api/v1/models", {
+    signal: AbortSignal.timeout(15000)
+  });
   if (!res.ok) {
     throw new Error(`OpenRouter API responded with HTTP ${res.status} (${res.statusText})`);
   }

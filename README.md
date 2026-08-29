@@ -187,21 +187,22 @@ chmod +x setup-dsh.sh
 # 🌐 1. Launch the VS Code-style Browser Web IDE (http://127.0.0.1:3080)
 bun run web
 
-# ⌨️ 2. Launch the High-Performance Keyboard Terminal Matrix
+# ⌨️ 2. Attach the Keyboard-First Terminal Matrix (Connects to active DSH backend)
+# Tip: Run 'bun run web' in terminal 1, then run 'bun run cli' in terminal 2
 bun run cli
 
-# 🤖 3. Execute a Headless Agent Automation Pipeline
+# 🤖 3. Execute a Standalone Headless Agent Pipeline (Zero-browser, direct runner)
 bun run headless "Audit this repository and suggest architecture optimizations"
 
 # 🔄 4. Synchronize Live Models from OpenRouter
 bun run sync-models
 
-# 🩺 5. Run the Workspace Health Diagnostic (Detects local vs global target)
+# 🩺 5. Run the Workspace Health Diagnostic (Detects local vs global target & permissions)
 bun run doctor
 
 # 🧹 6. Clean Slate Workspace Reset
-bun run reset            # Resets local ./.dsh workspace configuration
-./reset.sh --global      # Resets global ~/.dsh configuration
+bun run reset            # Resets local ./.dsh workspace configuration and artifacts
+./reset.sh --global      # Resets global ~/.dsh configuration only
 ```
 
 ---

@@ -34,6 +34,7 @@ const EXPECTED_PLUGINS = [
   "dsh-better-sidebar",
   "dsh-find-plugin",
   "@liustack/modsearch",
+  "dsh-provider-model-configurator",
 ];
 const EXPECTED_HEADLESS_PLUGINS = [
   "dsh-find-plugin",
@@ -50,6 +51,32 @@ function info(label, detail = "") { lines.push(`ℹ️  ${label}${detail ? ` —
 
 function readIfExists(p) {
   try { return fs.readFileSync(p, "utf8"); } catch { return null; }
+}
+
+function checkPermissions() {
+  if (!fs.existsSync(HOME_DSH)) return;
+  try {
+    const dirStat = fs.statSync(HOME_DSH);
+    const dirMode = dirStat.mode & 0o777;
+    if ((dirMode & 0o077) !== 0) {
+      warn("Folder permissions", `${DISPLAY_TARGET} is mode 0${dirMode.toString(8)} (recommend 0700)`);
+    } else {
+      pass("Folder permissions", `${DISPLAY_TARGET} mode 0${dirMode.toString(8)}`);
+    }
+
+    const credPath = path.join(HOME_DSH, ".credentials.yaml");
+    if (fs.existsSync(credPath)) {
+      const credStat = fs.statSync(credPath);
+      const credMode = credStat.mode & 0o777;
+      if ((credMode & 0o077) !== 0) {
+        warn("Credential permissions", `${DISPLAY_TARGET}/.credentials.yaml is mode 0${credMode.toString(8)} (recommend 0600)`);
+      } else {
+        pass("Credential permissions", `${DISPLAY_TARGET}/.credentials.yaml mode 0${credMode.toString(8)}`);
+      }
+    }
+  } catch (err) {
+    warn("Permission check", err.message);
+  }
 }
 
 /** Mirror dsh-credentials-local's layering; never log the value itself. */
@@ -81,6 +108,7 @@ async function checkCredentials() {
   try {
     const res = await fetch("https://openrouter.ai/api/v1/auth/key", {
       headers: { Authorization: `Bearer ${found.key}` },
+      signal: AbortSignal.timeout(10000),
     });
     if (res.status === 200) {
       let detail = `source: ${found.source}`;
@@ -141,6 +169,9 @@ function checkWorkspace() {
   try {
     const pkg = JSON.parse(manifest);
     scripts = pkg.scripts ?? {};
+    const deps = { ...pkg.dependencies, ...pkg.devDependencies };
+    if (!deps["@deepseek-ai/dsh"]) warn("Framework dependency", "@deepseek-ai/dsh missing in package.json dependencies");
+    if (!deps["dsh-tui"]) warn("TUI dependency", "dsh-tui missing in package.json dependencies");
   } catch { fail("Workspace manifest", "package.json is not valid JSON"); return; }
 
   const dshPkg = readIfExists(path.join(process.cwd(), "node_modules", "@deepseek-ai", "dsh", "package.json"));
@@ -198,6 +229,7 @@ console.log("🩺 DSH workspace doctor — read-only diagnostics\n");
 
 pass("Bun runtime", `bun ${Bun.version}`);
 checkWorkspace();
+checkPermissions();
 await checkCredentials();
 checkPatch();
 checkSettings();

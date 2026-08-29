@@ -20,7 +20,7 @@
   ],
   "scripts": {
     "web": "DSH_HOME=\"${DSH_HOME:-./.dsh}\" dsh web",
-    "cli": "DSH_HOME=\"${DSH_HOME:-./.dsh}\" dsh-tui",
+    "cli": "DSH_HOME=\"${DSH_HOME:-./.dsh}\" bun run bin/dsh-cli.js",
     "headless": "DSH_HOME=\"${DSH_HOME:-./.dsh}\" dsh --profile headless",
     "sync-models": "bun run sync-models.js",
     "doctor": "bun doctor.js",

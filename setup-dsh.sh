@@ -64,6 +64,14 @@ if ! command -v bun &> /dev/null; then
     exit 1
 fi
 echo "✅ Detected Bun runtime: $(bun --version)"
+
+if ! command -v pnpm &> /dev/null; then
+    echo "ℹ️  'pnpm' not found in PATH — ensuring pnpm is available via Bun..."
+    bun add -g pnpm > /dev/null 2>&1 || true
+fi
+if command -v pnpm &> /dev/null; then
+    echo "✅ Detected pnpm runtime: $(pnpm --version)"
+fi
 echo ""
 
 # 3. Capture the OpenRouter key silently without outputting it to logs
@@ -82,7 +90,8 @@ echo "🔑 Validating key against the OpenRouter API..."
 KEY_STATUS="$(OR_KEY="${OR_KEY}" bun -e '
   try {
     const r = await fetch("https://openrouter.ai/api/v1/auth/key", {
-      headers: { Authorization: `Bearer ${process.env.OR_KEY}` }
+      headers: { Authorization: `Bearer ${process.env.OR_KEY}` },
+      signal: AbortSignal.timeout(10000)
     });
     process.stdout.write(String(r.status));
   } catch {
@@ -104,14 +113,29 @@ if [ ! -d ".git" ]; then
     git init -q
 fi
 
-# 5. Initialize project manifest context if missing and install core bundle
+# 5. Initialize project manifest context safely (preserving any pre-existing files)
 echo "⚡ Installing DeepSeek Harness framework engine & TUI via Bun..."
 if [ ! -f "package.json" ]; then
-    bun init -y > /dev/null
-    rm -f CLAUDE.md index.ts tsconfig.json || true
-    bun add @deepseek-ai/dsh dsh-tui
-else
+    cat << 'EOF' > package.json
+{
+  "name": "deepseek-harness-workspace",
+  "private": true,
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh": "^0.1.1-rc.2",
+    "dsh-tui": "^0.2.19"
+  }
+}
+EOF
     bun install
+else
+    if ! grep -q "@deepseek-ai/dsh" package.json 2>/dev/null || ! grep -q "dsh-tui" package.json 2>/dev/null; then
+        bun add @deepseek-ai/dsh dsh-tui
+    else
+        bun install
+    fi
 fi
 
 # 6. Establish strict folder boundary permissions
@@ -120,6 +144,9 @@ mkdir -p "${DSH_DIR}"
 chmod 700 "${DSH_DIR}"
 
 # 7. Generate the Unified Zero-Plaintext Master Patch Orchestration Template (Top-level YAML Array)
+if [ -f "${DSH_DIR}/cordis.patch.yml" ]; then
+    cp "${DSH_DIR}/cordis.patch.yml" "${DSH_DIR}/cordis.patch.yml.bak"
+fi
 echo "✍️ Writing verified configuration patch layer to ${DSH_DIR}/cordis.patch.yml..."
 cat << 'EOF' > "${DSH_DIR}/cordis.patch.yml"
 # Disable default official DeepSeek provider in favor of OpenRouter Gateway
@@ -237,7 +264,9 @@ import os from "node:os";
 async function syncOpenRouterModels() {
   console.log("🌐 Fetching live model catalog from OpenRouter API (https://openrouter.ai/api/v1/models)...");
   
-  const res = await fetch("https://openrouter.ai/api/v1/models");
+  const res = await fetch("https://openrouter.ai/api/v1/models", {
+    signal: AbortSignal.timeout(15000)
+  });
   if (!res.ok) {
     throw new Error(`OpenRouter API responded with HTTP ${res.status} (${res.statusText})`);
   }
@@ -305,14 +334,17 @@ fi
 # 11. Programmatically bind scripts using 100% Bun Execution
 echo "📌 Writing runtime script bindings to your local package.json..."
 bun pm trust --all || true
-bun -e '
+DSH_DIR="${DSH_DIR}" bun -e '
   const fs = require("fs");
+  const path = require("path");
   const p = JSON.parse(fs.readFileSync("package.json", "utf8"));
+  const isLocal = process.env.DSH_DIR !== path.join(process.env.HOME || "", ".dsh");
+  const prefix = isLocal ? "DSH_HOME=\"${DSH_HOME:-./.dsh}\" " : "";
   p.scripts = {
     ...p.scripts,
-    web: "dsh web",
-    cli: "dsh-tui",
-    headless: "dsh --profile headless",
+    web: prefix + "dsh web",
+    cli: prefix + "bun run bin/dsh-cli.js",
+    headless: prefix + "dsh --profile headless",
     "sync-models": "bun run sync-models.js",
     ...(fs.existsSync("doctor.js") ? { doctor: "bun doctor.js" } : {}),
     ...(fs.existsSync("reset.sh") ? { reset: "bash reset.sh" } : {})
