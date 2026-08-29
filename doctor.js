@@ -22,7 +22,8 @@ function resolveDshDir() {
 }
 
 const HOME_DSH = resolveDshDir();
-const IS_LOCAL = HOME_DSH.startsWith(process.cwd());
+const rel = path.relative(process.cwd(), HOME_DSH);
+const IS_LOCAL = !rel.startsWith("..") && !path.isAbsolute(rel);
 const DISPLAY_TARGET = IS_LOCAL ? `./.dsh (local workspace)` : HOME_DSH.replace(os.homedir(), "~");
 
 const PLUGIN_DIR = path.join(HOME_DSH, "profiles", "web", "node_modules");

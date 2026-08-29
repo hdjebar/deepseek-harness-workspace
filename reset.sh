@@ -48,11 +48,13 @@ echo ""
 echo "⚠️  WARNING: This will perform the following actions:"
 echo "   1. Terminate any active DSH background processes and servers on port 3080"
 echo "   2. Wipe the target configuration & credential store (${TARGET_DSH})"
-echo "   3. Purge local node_modules, caches, and runtime logs"
+if [ "$GLOBAL_RESET" = false ] && [[ -z "$CUSTOM_DIR" ]]; then
+    echo "   3. Purge local workspace artifacts (node_modules, .dsh, caches, logs)"
+fi
 echo ""
 
 if [ "$FORCE" = false ]; then
-    read -rp "Are you sure you want to completely reset? [y/N]: " CONFIRM
+    read -rp "Are you sure you want to proceed with reset? [y/N]: " CONFIRM
     if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
         echo "❌ Reset cancelled."
         exit 0
@@ -70,11 +72,17 @@ echo "🧹 [2/3] Removing configuration directory: ${TARGET_DSH}..."
 rm -rf "${TARGET_DSH}"
 echo "✅ Configuration purged."
 
-echo "🗑️  [3/3] Cleaning local workspace artifacts (node_modules, caches, logs)..."
-rm -rf node_modules .dsh *.log /tmp/dsh-*
-echo "✅ Local workspace cleaned."
+if [ "$GLOBAL_RESET" = false ] && [[ -z "$CUSTOM_DIR" ]]; then
+    echo "🗑️  [3/3] Cleaning local workspace artifacts (node_modules, caches, logs)..."
+    rm -rf node_modules .dsh *.log /tmp/dsh-*
+    echo "✅ Local workspace cleaned."
+else
+    echo "🗑️  [3/3] Cleaning temporary runtime locks (/tmp/dsh-*)..."
+    rm -rf /tmp/dsh-*
+    echo "✅ Temporary locks cleaned."
+fi
 
 echo ""
-echo "✨ Full reset complete! Your system is back to a clean slate."
+echo "✨ Reset complete! Specified target has been wiped."
 echo "➡️ To reinstall and reconfigure, run: ./setup-dsh.sh"
 echo "=========================================================================="

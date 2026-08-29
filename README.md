@@ -8,7 +8,7 @@
 [![OpenRouter](https://img.shields.io/badge/OpenRouter-390%2B%20Live%20Models-6366F1?style=for-the-badge&logo=openai&logoColor=white)](https://openrouter.ai)
 [![Free Search](https://img.shields.io/badge/Web%20Search-%40liustack%2Fmodsearch%20(Free)-06B6D4?style=for-the-badge&logo=searxng&logoColor=white)](https://www.npmjs.com/package/@liustack/modsearch)
 [![Security](https://img.shields.io/badge/Security-POSIX%200600%20Isolated-10B981?style=for-the-badge&logo=auth0&logoColor=white)](#-security--sandboxing)
-[![CI Status](https://img.shields.io/badge/CI-Passing%20100%25-22C55E?style=for-the-badge&logo=githubactions&logoColor=white)](#-automated-ci--quality-gates)
+[![CI Status](https://github.com/hdjebar/deepseek-harness-workspace/actions/workflows/ci.yml/badge.svg)](https://github.com/hdjebar/deepseek-harness-workspace/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](LICENSE)
 
 <p align="center">
