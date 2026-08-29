@@ -1,28 +1,45 @@
 <div align="center">
 
 # ⚡ DeepSeek Harness (DSH)
-### *Production-Grade Developer Workspace & Multi-Interface AI Engine*
+### *Your Personal AI Environment — One Command, 390+ Models, Fully Yours*
 
 [![Bun Runtime](https://img.shields.io/badge/Bun-1.2%2B-000000?style=for-the-badge&logo=bun&logoColor=white)](https://bun.sh)
 [![DeepSeek Harness](https://img.shields.io/badge/@deepseek--ai/dsh-0.1.1--rc.2-0066FF?style=for-the-badge&logo=codeforces&logoColor=white)](https://github.com/deepseek-ai)
 [![OpenRouter](https://img.shields.io/badge/OpenRouter-390%2B%20Live%20Models-6366F1?style=for-the-badge&logo=openai&logoColor=white)](https://openrouter.ai)
 [![Free Search](https://img.shields.io/badge/Web%20Search-%40liustack%2Fmodsearch%20(Free)-06B6D4?style=for-the-badge&logo=searxng&logoColor=white)](https://www.npmjs.com/package/@liustack/modsearch)
-[![Security](https://img.shields.io/badge/Security-POSIX%200600%20Isolated-10B981?style=for-the-badge&logo=auth0&logoColor=white)](#-security--sandboxing)
+[![Security](https://img.shields.io/badge/Security-POSIX%200600%20Isolated-10B981?style=for-the-badge&logo=auth0&logoColor=white)](docs/security.md)
 [![CI Status](https://github.com/hdjebar/deepseek-harness-workspace/actions/workflows/ci.yml/badge.svg)](https://github.com/hdjebar/deepseek-harness-workspace/actions/workflows/ci.yml)
+[![GitHub Stars](https://img.shields.io/github/stars/hdjebar/deepseek-harness-workspace?style=for-the-badge&color=FFD700&logo=github)](https://github.com/hdjebar/deepseek-harness-workspace/stargazers)
 [![License](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](LICENSE)
 
 <p align="center">
-  <b>A blazing-fast, local-first multi-interface AI engineering workbench built on the <a href="https://bun.sh">Bun runtime</a> and <a href="https://github.com/deepseek-ai">DeepSeek Harness</a> framework.</b><br>
-  Equipped with dynamic OpenRouter model discovery, free search engines, MCP tooling consoles, and isolated credential stores.
+  <b>Stop juggling provider API keys, paid search subscriptions, and plaintext <code>.env</code> files scattered across projects.</b><br>
+  DSH is a local-first, <a href="https://bun.sh">Bun</a>-powered workbench that gives you your own AI environment in one command —<br>
+  a live gateway to <b>390+ models</b>, free multi-engine web search, a plugin marketplace, and a growing library of skills that stay <i>yours</i>.
 </p>
 
 ---
 
-[🚀 Quick Start](#-quick-start-in-60-seconds) • [✨ Key Features](#-core-capabilities) • [🎨 Customization Guide](docs/customization.md) • [🛒 Plugin Store](docs/plugins.md) • [🔍 Free Search](docs/search.md) • [🏛️ Architecture](docs/architecture.md) • [🩺 Doctor](#-diagnostic-health-check) • [🛡️ Security](docs/security.md)
+[🚀 Quick Start](#-quick-start-in-60-seconds) • [🤔 Why DSH?](#-why-dsh) • [✨ Key Features](#-core-capabilities) • [🎨 Customization Guide](docs/customization.md) • [🛒 Plugin Store](docs/plugins.md) • [🔍 Free Search](docs/search.md) • [🏛️ Architecture](docs/architecture.md) • [🩺 Doctor](#-diagnostic-health-check) • [🛡️ Security](docs/security.md)
 
 ---
 
 </div>
+
+## 🤔 Why DSH?
+
+| Without DSH | With DSH |
+| :--- | :--- |
+| A separate API key and billing plan per model provider | One [OpenRouter](https://openrouter.ai) gateway → **390+ models**, one key |
+| Paying for search APIs (Tavily, Bing, Google Search) | `@liustack/modsearch` — multi-engine web search, **zero cost, zero keys** |
+| Plaintext `.env` secrets scattered across repos | A POSIX `0600` credential vault with legacy `.env` auto-purged |
+| Re-installing and reconfiguring tooling per project | `./setup-dsh.sh` — isolated, idempotent, **under 60 seconds** |
+| Locked into one interface | The same environment in a **web IDE, terminal TUI, or headless agent** |
+| Static, one-time setup | A workspace that **grows with you** — plugins, skills, and models synced live |
+
+If you want an AI workbench that's actually *yours* — local, inspectable, and shaped by your own skills and prompts rather than a vendor's chat window — DSH is built for that.
+
+---
 
 ## ✨ Core Capabilities
 
@@ -183,6 +200,10 @@ Deep-dive guides live in [`docs/`](docs/):
 ---
 
 <div align="center">
+
+### ⭐ If DSH saves you setup time, star the repo — it helps others find it.
+
+[![GitHub Stars](https://img.shields.io/github/stars/hdjebar/deepseek-harness-workspace?style=social)](https://github.com/hdjebar/deepseek-harness-workspace/stargazers)
 
 Made with ⚡ by [Hdjebar](https://github.com/hdjebar) • Powered by [DeepSeek Harness](https://github.com/deepseek-ai) & [Bun](https://bun.sh)
 
