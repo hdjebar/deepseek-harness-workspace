@@ -13,6 +13,7 @@ flowchart TD
     PROMPT --> ACTION3["🧠 3. Create Custom Domain Skills\n(in ./skills/<name>/SKILL.md)"]
     PROMPT --> ACTION4["⚙️ 4. Tune Models & Samplers\n(via OpenRouter & Model Pro)"]
     PROMPT --> ACTION5["🛡️ 5. Adjust Sandbox Policies\n(workspace-write vs read-only)"]
+    PROMPT --> ACTION6["🏠 6. Swap in an On-Prem Provider\n(Ollama / LM Studio / vLLM via llm-pi-ai)"]
 ```
 
 ---
@@ -149,6 +150,56 @@ DSH_PORT=3081 bun run doctor
 
 ---
 
+## 8. 🏠 Going Local: Switching to an On-Premises AI Provider
+
+### The tradeoff
+By default, DSH routes every prompt through [OpenRouter](https://openrouter.ai) — that's what gives you one key and 390+ models, but it also means your prompts leave your machine and go through a third-party gateway. If "personal AI environment" means *private*, not just *isolated per-project*, you'll want inference that never leaves your network.
+
+### Why this is straightforward in DSH
+Because **everything is a plugin**, the model provider isn't hardcoded — it's just configuration on the `llm-pi-ai` Cordis plugin. OpenRouter is registered as one entry in a `providers` map, using a generic OpenAI-compatible protocol (`api: openai-completions`) and a `baseURL`. Any local inference server that speaks the same OpenAI-compatible API — [Ollama](https://ollama.com), [LM Studio](https://lmstudio.ai), [vLLM](https://github.com/vllm-project/vllm), or [llama.cpp server](https://github.com/ggml-org/llama.cpp) — can be registered exactly the same way, side-by-side with OpenRouter, and selected as the active model with a one-line config change (or a prompt).
+
+### Example Prompts:
+> 💬 *"Add a local Ollama provider pointing to `http://localhost:11434/v1` serving `llama3.1`, and switch the default model to it."*  
+> 💬 *"Register my LM Studio server as a provider and let me pick between it and OpenRouter from Model Pro."*
+
+### Manual Configuration (`~/.dsh/cordis.patch.yml`):
+```yaml
+- id: llm-pi-ai
+  config:
+    providers:
+      openrouter:
+        apiKeyEnv: OPENROUTER_API_KEY
+        displayName: "OpenRouter"
+        api: openai-completions
+        baseURL: "https://openrouter.ai/api/v1"
+      # 🏠 Add a local, on-premises provider alongside it
+      ollama-local:
+        apiKeyEnv: OLLAMA_API_KEY   # most local servers ignore this; set any placeholder value
+        displayName: "Ollama (Local)"
+        api: openai-completions
+        baseURL: "http://localhost:11434/v1"
+
+# Point the default model at your local server instead of OpenRouter
+- id: agent-default-model
+  config:
+    provider: ollama-local
+    model: llama3.1
+```
+
+| Local server | Typical OpenAI-compatible `baseURL` |
+| :--- | :--- |
+| **Ollama** | `http://localhost:11434/v1` |
+| **LM Studio** | `http://localhost:1234/v1` |
+| **vLLM** | `http://localhost:8000/v1` |
+| **llama.cpp server** | `http://localhost:8080/v1` |
+
+### Notes:
+* Since `apiKeyEnv` still resolves through the same managed credential store, add a placeholder value with `bun run doctor`'s companion setup or by hand-editing `.credentials.yaml` (`chmod 600`) — most local servers accept any non-empty key.
+* Both providers can stay registered at once; switch between them per-task from the **Model Pro UI** (`dsh-provider-model-configurator`) or by editing `agent-default-model` — no reinstall required.
+* Going local only covers *inference*. `@liustack/modsearch` (web search) and any MCP servers you've added still reach the network unless you point them at self-hosted equivalents too.
+
+---
+
 ## 📚 Quick Reference Summary
 
 | Goal | Method | Location / Command |
@@ -156,6 +207,7 @@ DSH_PORT=3081 bun run doctor
 | **Add Plugins** | Prompt agent or use GUI Store | `dshmarket` in Web UI / `dsh-find-plugin` |
 | **Add MCP Servers** | Prompt agent or edit YAML | `dsh-mcp-panel` / `./.dsh/cordis.patch.yml` |
 | **Add Skills** | Prompt agent to write Markdown | `./skills/<name>/SKILL.md` |
+| **Go Local (On-Prem AI)** | Register an OpenAI-compatible local server as a provider | `llm-pi-ai.config.providers` in `./.dsh/cordis.patch.yml` |
 | **Custom Port** | Set environment variable | `DSH_PORT=3081 bun run web` |
 | **Sync Models** | Run sync command | `bun run sync-models` |
 | **Check Health** | Run diagnostic | `bun run doctor` |
