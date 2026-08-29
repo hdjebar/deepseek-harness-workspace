@@ -156,6 +156,9 @@ chmod +x setup-dsh.sh
 > [!TIP]
 > **Local by Default:** Configurations, credentials, and plugins are stored in `./.dsh` (already ignored by `.gitignore`). You can have multiple distinct DSH workspaces on the same machine without any cross-project conflicts!
 
+> [!WARNING]
+> **This "local by default" only holds if `DSH_HOME` isn't already set in your shell.** Both `setup-dsh.sh` and `reset.sh` check `$DSH_HOME` *before* falling back to `./.dsh` — an env var left over from a previous `--global` run, a wrapper script, or an inherited CI variable silently overrides the local default, with no flag needed to trigger it. Both scripts print the resolved target path before acting (`📁 DSH Configuration Target: ...`) — check it, especially before `./reset.sh`, since `DSH_HOME` outranks even the `.dsh-target` marker file there. Run `echo $DSH_HOME` first if you're unsure what a bare command will target.
+
 ---
 
 ## 💻 Runtime Interfaces & Commands

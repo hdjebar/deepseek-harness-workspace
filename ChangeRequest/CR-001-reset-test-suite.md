@@ -27,6 +27,7 @@ Add a test step to `.github/workflows/ci.yml` (or a separate `test-reset.sh` inv
 | Target = `/` | n/a | any | Safety-abort triggered |
 | Non-DSH directory (no sentinel files) | n/a | target dir has no `cordis.patch.yml`/`.credentials.yaml`/etc. | Safety-abort triggered |
 | `HOME` unset | n/a | `HOME` unset | `USER_HOME` resolves via `cd ~`, not `$PWD` |
+| `$DSH_HOME` set, no flags, marker present | `.dsh-target` = `./relative-dir` | `DSH_HOME=/some/other/dir` exported | Resolves to `$DSH_HOME`, **not** the marker's local path — `DSH_HOME` outranks the marker per `reset.sh`'s own documented precedence (`--dir → --global → DSH_HOME → .dsh-target → local`). See CR-009. |
 
 A shell test framework isn't required — a short bash script that sets up temp directories, sources the relevant variable-computation logic (or runs `reset.sh --force` against fixtures in a throwaway `$PWD` and inspects what would be deleted, without actually confirming), and asserts on stdout/exit behavior would do. `bats-core` is a reasonable off-the-shelf option if a heavier framework is preferred.
 

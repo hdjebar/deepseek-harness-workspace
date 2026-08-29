@@ -24,8 +24,9 @@ This folder tracks **proposed** improvements to DSH — things worth doing, not 
 | [CR-006](CR-006-doctor-usage-visibility.md) | Spend/usage visibility in `doctor.js` | Low | `doctor.js`, `sync-models.js` | 🟡 Proposed |
 | [CR-007](CR-007-cost-aware-model-router.md) | Cost-aware default-model routing | Low (bigger swing) | `cordis.patch.yml`, `sync-models.js` | 🟡 Proposed |
 | [CR-008](CR-008-encrypted-credentials.md) | Encrypted-at-rest credential option (age/sops) | Low (bigger swing) | `setup-dsh.sh`, security model | 🟡 Proposed |
+| [CR-009](CR-009-warn-on-inherited-dsh-home.md) | Warn when `$DSH_HOME` overrides the local/marker target | High | `reset.sh`, `setup-dsh.sh` | 🟡 Proposed |
 
-Ordered roughly by leverage, not by number — CR-001 is the one I'd push back on hardest if someone wanted to skip it, since it's testing the exact class of bug that has already regressed in this repo's history (twice, per its own commit log) rather than adding anything new.
+Ordered roughly by leverage, not by number — CR-001 and CR-009 are the two I'd push back on hardest if someone wanted to skip them: both are about `reset.sh` silently deleting the wrong thing (a marker-classification bug and an inherited-env-var override, respectively), and both are classes of bug that have already bitten this repo, not hypothetical ones.
 
 ---
 

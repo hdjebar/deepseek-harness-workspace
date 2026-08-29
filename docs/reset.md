@@ -36,6 +36,9 @@ The reset script safely:
 2. Purges the target configuration store (local `./.dsh` by default, or `~/.dsh` with `--global`).
 3. Cleans local untracked `node_modules`, `.dsh/`, and runtime logs in local mode (without affecting other workspaces).
 
+> [!WARNING]
+> **Target resolution order is `--dir` → `--global` → `$DSH_HOME` → the `.dsh-target` marker file → local `./.dsh`.** If `DSH_HOME` is already set in your shell (left over from testing `--global` elsewhere, a wrapper script, an inherited CI variable), a bare `./reset.sh` targets *that* directory instead of the project you're standing in — silently, with no `--global` flag needed. It outranks even the `.dsh-target` marker, so don't assume "no flags = only this project's `./.dsh`" without first checking the printed `📁 DSH Configuration Target: ...` line (or `echo $DSH_HOME`).
+
 *To reinstall and configure fresh after reset, simply run `./setup-dsh.sh`.*
 
 ---
