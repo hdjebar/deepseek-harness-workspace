@@ -1,0 +1,7 @@
+{
+  "name": "filesystem-mcp",
+  "displayName": "Local Filesystem MCP Server",
+  "description": "Secure, scoped file system reading, writing, and directory search for agents",
+  "command": "npx",
+  "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]
+}

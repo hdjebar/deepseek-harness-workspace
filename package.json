@@ -24,6 +24,7 @@
     "headless": "dsh --profile headless",
     "sync-models": "bun run sync-models.js",
     "doctor": "bun doctor.js",
+    "template": "bun apply-template.js",
     "reset": "bash reset.sh"
   }
 }

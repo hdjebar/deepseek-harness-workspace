@@ -1,0 +1,10 @@
+{
+  "name": "github-mcp",
+  "displayName": "GitHub Context MCP Server",
+  "description": "Inspect repositories, pull requests, issues, and commit histories via GitHub API",
+  "command": "npx",
+  "args": ["-y", "@modelcontextprotocol/server-github"],
+  "env": {
+    "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+  }
+}

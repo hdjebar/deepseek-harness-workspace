@@ -131,14 +131,44 @@ bun run web
 # ⌨️ 2. Launch the High-Performance Keyboard Terminal Matrix
 bun run cli
 
-# 🤖 3. Execute a Headless Agent Automation Pipeline
+# 🎭 3. Switch Persona & Activate Skills
+bun run template
+bun run template fullstack-dev
+
+# 🤖 4. Execute a Headless Agent Automation Pipeline
 bun run headless "Audit this repository and suggest architecture optimizations"
 
-# 🔄 4. Synchronize Live Models from OpenRouter
+# 🔄 5. Synchronize Live Models from OpenRouter
 bun run sync-models
 
-# 🩺 5. Run the Workspace Health Diagnostic
+# 🩺 6. Run the Workspace Health Diagnostic
 bun run doctor
+
+# 🧹 7. Complete Workspace & Global Reset
+bun run reset
+```
+
+---
+
+## 🎭 Persona & Skill Templates
+
+This workspace includes curated persona profiles, domain skills, and MCP configurations in [`templates/`](templates/):
+
+| Persona | Key Domain & Focus | Default Model | Bundled Skills |
+| :--- | :--- | :--- | :--- |
+| **`fullstack-dev`** | TypeScript, Bun, React/Next.js, Node, REST/GraphQL, Testing | `deepseek/deepseek-chat` | `code-review`, `api-design`, `tdd-workflow`, `git-standards` |
+| **`software-architect`** | High-level system design, domain modeling, ADRs, Mermaid diagrams | `deepseek/deepseek-r1` | `api-design`, `code-review`, `git-standards` |
+| **`security-auditor`** | Vulnerability discovery, static analysis, secret protection, sandboxing | `deepseek/deepseek-r1` | `code-review`, `git-standards` |
+| **`devops-engineer`** | Docker, Kubernetes, CI/CD pipelines, defensive shell scripting | `deepseek/deepseek-chat` | `git-standards`, `code-review` |
+
+### How to Apply a Persona:
+```bash
+# List all available personas interactively
+bun run template
+
+# Switch to a specific persona
+bun run template fullstack-dev
+bun run template software-architect
 ```
 
 ---

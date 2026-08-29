@@ -1,0 +1,7 @@
+{
+  "name": "sqlite-mcp",
+  "displayName": "SQLite Database MCP Server",
+  "description": "Execute queries, inspect schemas, and analyze tables in local SQLite databases",
+  "command": "npx",
+  "args": ["-y", "@modelcontextprotocol/server-sqlite", "--db-path", "./data.db"]
+}
