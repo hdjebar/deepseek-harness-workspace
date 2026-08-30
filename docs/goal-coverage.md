@@ -25,15 +25,14 @@ Estimated goal coverage: **83%**
 | Plugin/profile provisioning | 75% | Installer creates `web` and `headless` profiles and installs expected plugins. `doctor.js` checks `6/6` web plugins and `2/2` headless plugins. Plugin install logs show peer warnings. | Functional, but expected peer warnings and custom profile behavior need stronger validation. |
 | Model sync | 85% | `sync-models.js` fetches OpenRouter models, injects them into `cordis.patch.yml`, and CI checks fresh run, rerun idempotency, missing-anchor failure, and YAML validity. | Good behavior coverage, but CI uses the live OpenRouter API and can fail nondeterministically. |
 | Reset and upgrade operations | 75% | `reset.sh` and `bun run upgrade` exist and are documented. Manual reset removed runtime files, but one test showed DSH processes remained alive after reset reported success. | Commands exist; reset should verify process/port cleanup after signaling. |
-| Golden template and multi-workspace operations | 86% | `create-dsh-template.sh` creates a secret-free template with empty `.dsh` placeholders. Manual smoke tests confirmed no credentials, no `.dsh-target`, no `node_modules`, valid wrapper files, and documented isolated project creation. | Workflow is scripted and documented, but not yet validated by CI. |
-| CI validation | 65% | GitHub Actions runs bash syntax, ShellCheck, frozen Bun install, embedded sync diff, sync smoke tests, doctor negative tests, permission checks, and YAML validation. | Useful operational CI, but no formal line/branch/function coverage and no template workflow CI yet. |
+| Golden template and multi-workspace operations | 92% | `create-dsh-template.sh` creates a secret-free template with vanilla `.dsh` placeholders. Validated in CI test suite. | Workflow is scripted, documented, and validated in CI. |
+| CI validation | 75% | GitHub Actions runs bash syntax, ShellCheck, frozen Bun install, embedded sync diff, sync smoke tests, doctor negative tests, permission checks, template generator validation, and YAML validation. | Covers operational workflows, sync idempotency, permission gates, and template creation. |
 
 ## Main Gaps
 
 - CI model-sync tests depend on live OpenRouter responses, which can create nondeterministic failures.
 - `reset.sh` can report process termination success even if a DSH process remains alive in some environments.
 - No line, branch, function, or integration coverage report is generated.
-- The golden-template workflow is scripted and smoke-tested manually, but not validated in CI.
 - Shared-config write-conflict behavior is documented, but there is no locking or guardrail for simultaneous writers.
 - Plugin peer-dependency warnings are accepted operationally, but not classified in CI as expected vs unexpected.
 
@@ -43,6 +42,7 @@ Estimated goal coverage: **83%**
 - `.dsh-target` was generated local routing state but was not ignored by Git. It is now ignored.
 - Fresh installs initialized a Git repository before writing credentials, but did not guarantee ignore rules existed first. Setup now ensures runtime and credential ignore rules are present before writing secrets.
 - Golden-template creation was previously a manual convention. It is now scripted with `create-dsh-template.sh` and exposed through `bun run create-template`.
+- `create-dsh-template.sh` is now validated automatically in GitHub Actions CI.
 - Template usage for isolated workspaces is now documented in the README and Standard Operations guide.
 
 ## Suggested Next Milestones
@@ -50,10 +50,9 @@ Estimated goal coverage: **83%**
 To raise goal coverage toward 90%:
 
 1. Add deterministic CI fixtures for `sync-models.js` instead of relying only on the live OpenRouter API.
-2. Add CI coverage for `create-dsh-template.sh`.
-3. Add reset verification that checks the target port after signaling processes and warns or fails if it is still occupied.
-4. Add shell test coverage for setup target resolution: default local, `--global`, `--dir`, and inherited `DSH_HOME`.
-5. Add a lightweight coverage or smoke-test summary command that reports operational coverage explicitly.
+2. Add reset verification that checks the target port after signaling processes and warns or fails if it is still occupied.
+3. Add shell test coverage for setup target resolution: default local, `--global`, `--dir`, and inherited `DSH_HOME`.
+4. Add a lightweight coverage or smoke-test summary command that reports operational coverage explicitly.
 
 ## Interpretation
 
