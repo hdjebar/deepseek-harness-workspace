@@ -94,12 +94,23 @@ Avoid running independent active sessions against the same shared config unless 
 
 Use a golden template when you want repeatable independent workspaces with the same starting files.
 
+Create a vanilla secret-free template:
+
+```bash
+./create-dsh-template.sh dsh-template
+# or
+bun run create-template -- dsh-template
+```
+
+The script creates the runnable files and empty placeholder config files. It does not write credentials, install dependencies, or create `.dsh-target`.
+
 Template contents:
 
 ```text
 dsh-template/
   package.json
   bun.lock
+  setup-dsh.sh
   bin/
   sync-models.js
   doctor.js
@@ -110,6 +121,8 @@ dsh-template/
     settings.yaml
     profiles/
 ```
+
+The `.dsh/cordis.patch.yml` and `.dsh/settings.yaml` files are intentionally empty in the vanilla template. They are placeholders that make the intended structure visible and can be committed in a template repository. `setup-dsh.sh` rewrites them during real workspace bootstrap and ensures the bootstrapped workspace ignores runtime `.dsh/` state.
 
 Do not include:
 
@@ -127,9 +140,54 @@ cp -R dsh-template project-a
 cd project-a
 ./setup-dsh.sh
 bun run doctor
+bun run web
 ```
 
-Each project gets fresh credentials and its own local routing.
+This produces an isolated DSH workspace:
+
+```text
+project-a/
+  package.json
+  bun.lock
+  setup-dsh.sh
+  bin/
+  sync-models.js
+  doctor.js
+  reset.sh
+  node_modules/
+  .dsh/
+    cordis.patch.yml
+    settings.yaml
+    .credentials.yaml
+    profiles/
+  .dsh-target
+```
+
+Each project gets fresh credentials, its own local routing, its own plugins, and its own synced model catalog. The project does not share writable DSH state with `dsh-template`.
+
+Create another isolated workspace from the same template:
+
+```bash
+cd ..
+cp -R dsh-template project-b
+cd project-b
+./setup-dsh.sh
+DSH_PORT=3081 bun run web
+```
+
+`project-a` and `project-b` are now independent. Changes to model settings, credentials, profiles, or plugins in one workspace do not affect the other.
+
+When running multiple isolated workspaces at the same time, use different ports:
+
+```bash
+cd project-a
+DSH_PORT=3080 bun run web
+```
+
+```bash
+cd ../project-b
+DSH_PORT=3081 bun run web
+```
 
 ## Reset
 

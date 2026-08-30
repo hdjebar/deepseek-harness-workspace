@@ -25,6 +25,7 @@
     "sync-models": "bun run sync-models.js",
     "doctor": "bun doctor.js",
     "reset": "bash reset.sh",
-    "upgrade": "bun run bin/dsh-upgrade.js"
+    "upgrade": "bun run bin/dsh-upgrade.js",
+    "create-template": "bash create-dsh-template.sh"
   }
 }

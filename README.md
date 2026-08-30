@@ -212,10 +212,17 @@ Both workspaces read and write `shared-dsh-config/`, including credentials, mode
 
 For repeatable independent project workspaces, keep a secret-free template and clone or copy it:
 
+```bash
+./create-dsh-template.sh dsh-template
+# or
+bun run create-template -- dsh-template
+```
+
 ```text
 dsh-template/
   package.json
   bun.lock
+  setup-dsh.sh
   bin/
   sync-models.js
   doctor.js
@@ -227,7 +234,31 @@ dsh-template/
     profiles/
 ```
 
-Do not include real `.dsh/.credentials.yaml`, `.env`, `node_modules/`, or `.dsh-target` in the template. After cloning/copying the template, run `./setup-dsh.sh` inside the new workspace to write fresh credentials and local routing.
+The generated `.dsh/cordis.patch.yml` and `.dsh/settings.yaml` files are empty placeholders only. Do not include real `.dsh/.credentials.yaml`, `.env`, `node_modules/`, or `.dsh-target` in the template.
+
+Create an isolated DSH workspace from the template:
+
+```bash
+cp -R dsh-template project-a
+cd project-a
+./setup-dsh.sh
+bun run doctor
+bun run web
+```
+
+`project-a` now has its own local `.dsh/`, credentials, plugins, model catalog, `node_modules/`, and `.dsh-target`. It does not share writable DSH state with the template or with other projects.
+
+Create another isolated workspace the same way:
+
+```bash
+cd ..
+cp -R dsh-template project-b
+cd project-b
+./setup-dsh.sh
+DSH_PORT=3081 bun run web
+```
+
+Use a different `DSH_PORT` when running multiple isolated workspaces at the same time.
 
 > [!TIP]
 > **Resetting a `--dir` workspace:** `setup-dsh.sh --dir` writes the custom path into a `.dsh-target` marker in the current directory, so a later plain `./reset.sh` run from that same directory will usually find it automatically. But to reset it deterministically — immune to the `$DSH_HOME` issue below — pass the same path explicitly: `./reset.sh --dir /path/to/dsh-config`. `--dir` is `reset.sh`'s highest-precedence option, above even `--global` and `$DSH_HOME`.
