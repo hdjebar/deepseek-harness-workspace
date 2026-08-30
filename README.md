@@ -156,6 +156,79 @@ chmod +x setup-dsh.sh
 > [!TIP]
 > **Local by Default:** Configurations, credentials, and plugins are stored in `./.dsh` (already ignored by `.gitignore`). You can have multiple distinct DSH workspaces on the same machine without any cross-project conflicts!
 
+> [!IMPORTANT]
+> **Workspace vs. config directory:** The directory you `cd` into before running `setup-dsh.sh` becomes the runnable workspace. That is where `package.json`, `bun.lock`, `bin/`, `sync-models.js`, `doctor.js`, `reset.sh`, and `node_modules/` are created. The `--dir` option changes only where DSH configuration is stored. For a self-contained workspace, create a folder, `cd` into it, and run `../setup-dsh.sh` without `--dir`.
+
+### Self-Contained Workspace Pattern
+
+Use this when you want independent DSH workspaces for different projects:
+
+```bash
+mkdir dsh-work-a
+cd dsh-work-a
+../setup-dsh.sh
+bun run doctor
+bun run web
+```
+
+This creates:
+
+```text
+dsh-work-a/
+  package.json
+  bun.lock
+  bin/
+  sync-models.js
+  doctor.js
+  reset.sh
+  node_modules/
+  .dsh/
+  .dsh-target
+```
+
+Run commands from `dsh-work-a/`. To run multiple workspaces at the same time, assign different ports with `DSH_PORT`.
+
+### Shared Config Pattern
+
+Use `--dir` only when you intentionally want a runnable workspace to point at an external or shared DSH config store:
+
+```bash
+mkdir dsh-work-a
+cd dsh-work-a
+../setup-dsh.sh --dir ../shared-dsh-config
+```
+
+Another workspace can point to the same config:
+
+```bash
+mkdir ../dsh-work-b
+cd ../dsh-work-b
+../setup-dsh.sh --dir ../shared-dsh-config
+```
+
+Both workspaces read and write `shared-dsh-config/`, including credentials, model settings, profiles, plugins, and synced model catalogs. Do not use this mode for simultaneous independent work unless shared writes are intentional.
+
+### Golden Template Pattern
+
+For repeatable independent project workspaces, keep a secret-free template and clone or copy it:
+
+```text
+dsh-template/
+  package.json
+  bun.lock
+  bin/
+  sync-models.js
+  doctor.js
+  reset.sh
+  .gitignore
+  .dsh/
+    cordis.patch.yml
+    settings.yaml
+    profiles/
+```
+
+Do not include real `.dsh/.credentials.yaml`, `.env`, `node_modules/`, or `.dsh-target` in the template. After cloning/copying the template, run `./setup-dsh.sh` inside the new workspace to write fresh credentials and local routing.
+
 > [!TIP]
 > **Resetting a `--dir` workspace:** `setup-dsh.sh --dir` writes the custom path into a `.dsh-target` marker in the current directory, so a later plain `./reset.sh` run from that same directory will usually find it automatically. But to reset it deterministically — immune to the `$DSH_HOME` issue below — pass the same path explicitly: `./reset.sh --dir /path/to/dsh-config`. `--dir` is `reset.sh`'s highest-precedence option, above even `--global` and `$DSH_HOME`.
 
@@ -256,6 +329,7 @@ Deep-dive guides live in [`docs/`](docs/):
 | [🛒 Plugins & Marketplace](docs/plugins.md) | `dshmarket`, `dsh-find-plugin`, CLI plugin management, profile capability matrix |
 | [🔍 Free Web Search](docs/search.md) | `@liustack/modsearch` zero-cost search integration |
 | [🏛️ Architecture](docs/architecture.md) | System diagram — storage, interfaces, runtime, upstream infrastructure |
+| [📋 Standard Operations](docs/standard-operations.md) | Self-contained workspaces, shared config, golden templates, ports, reset, and upgrade routines |
 | [🛡️ Security & Sandboxing](docs/security.md) | Credential isolation, filesystem sandbox policies |
 | [🧹 Stopping & Resetting](docs/reset.md) | Killing lingering processes, `reset.sh` clean-slate workflow |
 | [❓ Troubleshooting](docs/troubleshooting.md) | Common errors and fixes |

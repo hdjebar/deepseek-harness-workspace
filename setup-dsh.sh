@@ -7,6 +7,7 @@ set -euo pipefail
 #   --global, -g       : Install configuration globally into ~/.dsh
 #   --dir, -d <path>   : Install configuration into a custom directory
 USER_HOME="${HOME:-$(cd ~ 2>/dev/null && pwd || echo "$PWD")}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DSH_TARGET="${DSH_HOME:-$PWD/.dsh}"
 
 while [[ $# -gt 0 ]]; do
@@ -120,6 +121,27 @@ if [ ! -d ".git" ]; then
     git init -q
 fi
 
+echo "🙈 Ensuring local runtime and credential artifacts are ignored by Git..."
+ensure_gitignore_entry() {
+    local pattern="$1"
+    touch .gitignore
+    if ! grep -qxF "$pattern" .gitignore 2>/dev/null; then
+        printf '%s\n' "$pattern" >> .gitignore
+    fi
+}
+
+ensure_gitignore_entry ".env"
+ensure_gitignore_entry ".env.*"
+ensure_gitignore_entry "!.env.example"
+ensure_gitignore_entry "*.credentials.yaml"
+ensure_gitignore_entry ".credentials.yaml"
+ensure_gitignore_entry "node_modules/"
+ensure_gitignore_entry "package-lock.json"
+ensure_gitignore_entry "pnpm-lock.yaml"
+ensure_gitignore_entry ".dsh-target"
+ensure_gitignore_entry ".dsh/"
+ensure_gitignore_entry "*.log"
+
 # 5. Initialize project manifest context safely (preserving any pre-existing files)
 echo "⚡ Installing DeepSeek Harness framework engine & TUI via Bun..."
 if [ ! -f "package.json" ]; then
@@ -143,6 +165,27 @@ else
     else
         bun install
     fi
+fi
+
+echo "🧩 Provisioning workspace command wrappers..."
+copy_if_missing() {
+    local src="$1"
+    local dest="$2"
+    if [ -f "$src" ] && [ ! -f "$dest" ]; then
+        mkdir -p "$(dirname "$dest")"
+        cp "$src" "$dest"
+    fi
+}
+
+copy_if_missing "${SCRIPT_DIR}/bin/resolve-dsh.js" "bin/resolve-dsh.js"
+copy_if_missing "${SCRIPT_DIR}/bin/dsh-web.js" "bin/dsh-web.js"
+copy_if_missing "${SCRIPT_DIR}/bin/dsh-cli.js" "bin/dsh-cli.js"
+copy_if_missing "${SCRIPT_DIR}/bin/dsh-headless.js" "bin/dsh-headless.js"
+copy_if_missing "${SCRIPT_DIR}/bin/dsh-upgrade.js" "bin/dsh-upgrade.js"
+copy_if_missing "${SCRIPT_DIR}/doctor.js" "doctor.js"
+copy_if_missing "${SCRIPT_DIR}/reset.sh" "reset.sh"
+if [ -f "reset.sh" ]; then
+    chmod +x "reset.sh"
 fi
 
 # 6. Establish strict folder boundary permissions

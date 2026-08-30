@@ -15,5 +15,6 @@ package-lock.json
 pnpm-lock.yaml
 
 # Local DSH runtime & cache
+.dsh-target
 .dsh/
 *.log
