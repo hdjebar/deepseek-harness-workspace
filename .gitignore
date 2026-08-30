@@ -17,4 +17,5 @@ pnpm-lock.yaml
 # Local DSH runtime & cache
 .dsh-target
 .dsh/
+test/
 *.log
