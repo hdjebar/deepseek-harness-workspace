@@ -161,15 +161,94 @@ Always check the printed target path before confirming a reset.
 
 ## Upgrade
 
-Routine upgrade:
+Run upgrades from the runnable workspace directory, not from the DSH config directory.
+
+Routine upgrade for the current runnable workspace:
+
+```bash
+cd dsh-work-a
+bun run upgrade
+```
+
+This updates framework dependencies, discovered profile plugins, the OpenRouter model catalog, and then runs `doctor`.
+
+Do not rerun `setup-dsh.sh` as a routine upgrade path if you have hand-edited DSH config, because setup rewrites core config files.
+
+### Self-Contained Workspace Upgrade
+
+Each self-contained workspace has its own runnable files and its own local `.dsh` config, so upgrade each workspace independently.
+
+```bash
+cd dsh-work-a
+bun run upgrade
+```
+
+```bash
+cd ../dsh-work-b
+bun run upgrade
+```
+
+Commit changed `package.json` and `bun.lock` in each workspace repository when appropriate.
+
+### Shared Config Upgrade
+
+For workspaces sharing a config directory through `--dir`, run upgrade from one runnable workspace that points at the shared config.
+
+```bash
+cd dsh-work-a
+bun run upgrade
+```
+
+This updates the runnable workspace dependencies in `dsh-work-a/` and also updates shared DSH profiles and model catalog in the shared config directory.
+
+Afterward, other runnable workspaces that use the same shared config may still need their own dependency update if their local `package.json`, `bun.lock`, or wrapper files are separate:
+
+```bash
+cd ../dsh-work-b
+bun update
+bun run doctor
+```
+
+Use `bun run upgrade` in the second workspace only if you also want it to drive shared plugin/model updates again.
+
+### Golden Template Upgrade
+
+Upgrade the template before creating new project workspaces from it.
+
+```bash
+cd dsh-template
+bun run upgrade
+bun run doctor
+```
+
+Then create new workspaces from the updated template:
+
+```bash
+cd ..
+cp -R dsh-template project-a
+cd project-a
+./setup-dsh.sh
+```
+
+Existing projects copied from an older template do not update automatically. Upgrade them directly or refresh them from the template using your normal project migration process.
+
+### Upgrade vs Setup
+
+Use:
 
 ```bash
 bun run upgrade
 ```
 
-This updates framework dependencies, profile plugins, the OpenRouter model catalog, and then runs `doctor`.
+for routine framework, plugin, and model-catalog updates.
 
-Do not rerun `setup-dsh.sh` as a routine upgrade path if you have hand-edited DSH config, because setup rewrites core config files.
+Use:
+
+```bash
+./setup-dsh.sh
+```
+
+only for initial bootstrap, credential reinitialization, or deliberate regeneration of core config.
 
 ## Git Hygiene
 

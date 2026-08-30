@@ -269,6 +269,19 @@ git add bun.lock package.json && git commit -m "chore: upgrade DSH ecosystem"
 > [!NOTE]
 > `bun run upgrade` already covers the framework, the `web`/`headless` plugins, and the model catalog in one command — this is the routine case. Crossing a minor version boundary, a custom profile it doesn't know about, or the git-commit-pinned `dsh-provider-model-configurator` each need a manual step instead, and re-running `setup-dsh.sh` for any of this will overwrite your customizations. See [docs/upgrading.md](docs/upgrading.md) for the full picture.
 
+### Upgrade Operations
+
+Run upgrades from the runnable workspace directory, not from the config directory:
+
+```bash
+cd dsh-work-a
+bun run upgrade
+```
+
+For self-contained workspaces, run `bun run upgrade` separately in each workspace you want to update. For shared-config workspaces, run it from one runnable workspace that points at the shared config; the shared profiles and model catalog will be updated for every workspace using that config. For golden templates, upgrade the template first, verify it, then create or refresh project workspaces from that updated template.
+
+Do not use `setup-dsh.sh` as a routine upgrade command. Setup rewrites core configuration files; `bun run upgrade` is the normal upgrade path.
+
 > [!TIP]
 > **Running Multiple Workspaces Simultaneously (Port Customization):**  
 > By default, DSH runs on port `3080`. To run a second workspace in parallel without collision, set `DSH_PORT`:  
