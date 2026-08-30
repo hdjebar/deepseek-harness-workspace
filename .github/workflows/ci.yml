@@ -42,6 +42,27 @@ jobs:
           awk 'index($0, "cordis.patch.yml") && index($0, "cat <<") {flag=1; next} flag && $0 == "EOF" {flag=0; next} flag' setup-dsh.sh > "$FIXTURE_HOME/.dsh/cordis.patch.yml"
           test -s "$FIXTURE_HOME/.dsh/cordis.patch.yml"
 
+          # Start deterministic local model catalog mock server
+          MOCK_PORT=3899
+          bun -e '
+            Bun.serve({
+              port: 3899,
+              fetch() {
+                return Response.json({
+                  data: [
+                    { id: "deepseek/deepseek-chat", name: "DeepSeek: DeepSeek V3" },
+                    { id: "openai/gpt-4o", name: "OpenAI: GPT-4o" },
+                    { id: "anthropic/claude-3.5-sonnet", name: "Anthropic: Claude 3.5 Sonnet" }
+                  ]
+                });
+              }
+            });
+          ' &
+          MOCK_PID=$!
+          sleep 0.5
+
+          export OPENROUTER_MODELS_URL="http://127.0.0.1:$MOCK_PORT"
+
           HOME="$FIXTURE_HOME" bun sync-models.js
           cp "$FIXTURE_HOME/.dsh/cordis.patch.yml" /tmp/after1.yml
 
@@ -53,8 +74,11 @@ jobs:
           sed -i '/# Route default model to OpenRouter/d; /- id: agent-default-model/d' "$FIXTURE_HOME/.dsh/cordis.patch.yml"
           if HOME="$FIXTURE_HOME" bun sync-models.js; then
             echo "::error::sync-models.js succeeded although the patch anchor was removed"
+            kill $MOCK_PID 2>/dev/null || true
             exit 1
           fi
+
+          kill $MOCK_PID 2>/dev/null || true
 
       - name: doctor.js fails loudly without credentials (negative test)
         run: |
@@ -132,7 +156,7 @@ jobs:
           bash reset.sh --dir "$CUSTOM_TARGET" --force
           test ! -d "$CUSTOM_TARGET"
 
-          # Test B: Global protection on default reset in mock workspace
+          # Test B: Global protection on default reset in mock workspace (hermetic without DSH_HOME)
           MOCK_WS=/tmp/dsh-mock-ws
           GLOBAL_MOCK=/tmp/dsh-global-mock
           rm -rf "$MOCK_WS" "$GLOBAL_MOCK"
@@ -140,12 +164,20 @@ jobs:
           cp reset.sh "$MOCK_WS/reset.sh"
           touch "$GLOBAL_MOCK/.dsh/cordis.patch.yml"
           echo "global" > "$MOCK_WS/.dsh-target"
-          (cd "$MOCK_WS" && HOME="$GLOBAL_MOCK" bash reset.sh --force)
+          (cd "$MOCK_WS" && HOME="$GLOBAL_MOCK" env -u DSH_HOME bash reset.sh --force)
           test ! -f "$MOCK_WS/.dsh-target"
           test -f "$GLOBAL_MOCK/.dsh/cordis.patch.yml"
           rm -rf "$MOCK_WS" "$GLOBAL_MOCK"
 
-          # Test C: Sentinel verification aborts on non-DSH directory
+          # Test C: DSH_HOME environment variable precedence
+          ENV_TARGET=/tmp/dsh-env-precedence-target
+          rm -rf "$ENV_TARGET"
+          mkdir -p "$ENV_TARGET"
+          touch "$ENV_TARGET/cordis.patch.yml"
+          DSH_HOME="$ENV_TARGET" bash reset.sh --force
+          test ! -d "$ENV_TARGET"
+
+          # Test D: Sentinel verification aborts on non-DSH directory
           UNRELATED_DIR=/tmp/unrelated-reset-guard
           rm -rf "$UNRELATED_DIR"
           mkdir -p "$UNRELATED_DIR"
