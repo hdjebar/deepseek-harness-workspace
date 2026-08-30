@@ -113,6 +113,11 @@ async function resolveKey() {
   return null;
 }
 
+function maskKey(key) {
+  if (!key || key.length <= 12) return "***";
+  return `${key.slice(0, 8)}...${key.slice(-3)}`;
+}
+
 async function checkCredentials() {
   const found = await resolveKey();
   if (!found) {
@@ -151,7 +156,7 @@ function checkPatch() {
     fail("Runtime patch layer", `${patchPath} not found — run ./setup-dsh.sh`);
     return;
   }
-  const count = (content.match(/^[ \t]*- id:\s*["']?[^"'\r\n]+["']?/gm) || []).length;
+  const count = (content.match(/^\s{4,}- id:\s*["'][^"'\r\n]+["']/gm) || []).length;
   if (count > 0) {
     pass("Model catalog synced", `${count} models in ${DISPLAY_TARGET}/cordis.patch.yml`);
   } else {
