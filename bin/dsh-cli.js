@@ -16,6 +16,7 @@ async function isServerRunning() {
 }
 
 async function main() {
+  console.log(`🔍 Probing DSH backend at ${targetUrl}...`);
   const running = await isServerRunning();
   if (!running) {
     console.error(`\n⚠️  DSH Web/Backend host is not active on ${targetUrl}.`);

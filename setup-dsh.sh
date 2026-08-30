@@ -70,6 +70,11 @@ if ! command -v bun > /dev/null 2>&1; then
 fi
 echo "✅ Detected Bun runtime: $(bun --version)"
 
+if ! command -v bunx > /dev/null 2>&1; then
+    echo "❌ Execution Aborted: 'bunx' binary is missing from your system PATH."
+    exit 1
+fi
+
 if ! command -v pnpm > /dev/null 2>&1; then
     echo "ℹ️  'pnpm' not found in PATH — ensuring pnpm is available via Bun..."
     bun add -g pnpm > /dev/null 2>&1 || true
@@ -196,6 +201,7 @@ chmod 700 "${DSH_DIR}"
 # 7. Generate the Unified Zero-Plaintext Master Patch Orchestration Template (Top-level YAML Array)
 if [ -f "${DSH_DIR}/cordis.patch.yml" ]; then
     cp "${DSH_DIR}/cordis.patch.yml" "${DSH_DIR}/cordis.patch.yml.bak"
+    echo "ℹ️  Existing configuration backed up to ${DSH_DIR}/cordis.patch.yml.bak"
 fi
 echo "✍️ Writing verified configuration patch layer to ${DSH_DIR}/cordis.patch.yml..."
 cat << 'EOF' > "${DSH_DIR}/cordis.patch.yml"
@@ -260,8 +266,22 @@ allowBuilds:
   protobufjs: true
   "@google/genai": true
 EOF
-# dsh-provider-model-configurator is pinned to upstream commit 70f8811 — bump deliberately.
-DSH_HOME="${DSH_DIR}" bunx @deepseek-ai/dsh plugin --profile web add dshmarket dsh-mcp-panel dsh-better-sidebar dsh-find-plugin @liustack/modsearch github:LiangYin233/dsh-provider-model-configurator#70f88112c7d92fadeb93e46f5dcb8b1f3ae6eba3
+
+cat << 'EOF' > "${DSH_DIR}/profiles/web/package.json"
+{
+  "name": "dsh-profile-web",
+  "private": true,
+  "dependencies": {}
+}
+EOF
+
+DSH_HOME="${DSH_DIR}" bunx @deepseek-ai/dsh plugin --profile web add \
+    dshmarket@^1.36.0 \
+    dsh-mcp-panel@^0.6.1 \
+    dsh-better-sidebar@^0.17.1 \
+    dsh-find-plugin@^0.3.7 \
+    @liustack/modsearch@^5.10.0 \
+    dsh-provider-model-configurator@github:LiangYin233/dsh-provider-model-configurator#70f88112c7d92fadeb93e46f5dcb8b1f3ae6eba3
 
 mkdir -p "${DSH_DIR}/profiles/headless"
 cat << 'EOF' > "${DSH_DIR}/profiles/headless/pnpm-workspace.yaml"
@@ -272,11 +292,19 @@ nodeLinker: hoisted
 autoInstallPeers: false
 allowBuilds:
   "@deepseek-ai/dsh-subprocess-local": true
-  koffi: true
-  protobufjs: true
-  "@google/genai": true
 EOF
-DSH_HOME="${DSH_DIR}" bunx @deepseek-ai/dsh plugin --profile headless add dsh-find-plugin @liustack/modsearch
+
+cat << 'EOF' > "${DSH_DIR}/profiles/headless/package.json"
+{
+  "name": "dsh-profile-headless",
+  "private": true,
+  "dependencies": {}
+}
+EOF
+
+DSH_HOME="${DSH_DIR}" bunx @deepseek-ai/dsh plugin --profile headless add \
+    @liustack/modsearch@^5.10.0 \
+    dsh-find-plugin@^0.3.7
 
 # 9. Store OpenRouter API credentials in the managed credential store and configure settings.yaml
 echo "🗝️ Injecting token into the managed store ${DSH_DIR}/.credentials.yaml and configuring ${DSH_DIR}/settings.yaml..."
@@ -302,10 +330,9 @@ chmod 600 "${DSH_DIR}/settings.yaml"
 # user-env fallback layer, so purge the legacy plaintext duplicate.
 rm -f "${DSH_DIR}/.env"
 
-# 10. Provision the sync tool on fresh setups, and upgrade pre-hardening copies
-# (older embedded versions failed silently when the patch anchor was missing)
-if [ ! -f "sync-models.js" ] || ! grep -q "openrouter block anchor" sync-models.js 2>/dev/null; then
-    echo "📡 Provisioning OpenRouter dynamic model synchronization tool..."
+# 10. Provision the standalone OpenRouter model catalog synchronization tool
+if [ ! -f "sync-models.js" ]; then
+    echo "📋 Writing standalone model catalog sync tool to sync-models.js..."
     cat << 'EOF' > sync-models.js
 #!/usr/bin/env bun
 import fs from "node:fs";
@@ -354,10 +381,11 @@ async function syncOpenRouterModels() {
         displayName: "OpenRouter"
         api: openai-completions
         baseURL: "https://openrouter.ai/api/v1"
+        reasoning: medium
         models:
 ${modelsYaml}`;
 
-  const anchorRe = /[ \t]*openrouter:[\s\S]*?(?=\n# Route default model|\n- id: agent-default-model)/;
+  const anchorRe = /^[ \t]*openrouter:[\s\S]*?(?=\n# Route default model|\n- id: agent-default-model)/m;
   if (!anchorRe.test(patchContent)) {
     throw new Error("Failed to locate the openrouter block anchor in cordis.patch.yml (missing '# Route default model' comment or agent-default-model entry).");
   }

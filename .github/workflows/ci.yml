@@ -106,3 +106,18 @@ jobs:
           ), "openrouter provider block missing"
           print("patch YAML OK:", len(doc), "entries; openrouter block present")
           PY
+
+      - name: create-dsh-template.sh generates valid template structure
+        run: |
+          TEMPLATE_DIR=/tmp/test-dsh-template
+          rm -rf "$TEMPLATE_DIR"
+          bash create-dsh-template.sh "$TEMPLATE_DIR"
+          test -f "$TEMPLATE_DIR/package.json"
+          test -f "$TEMPLATE_DIR/setup-dsh.sh"
+          test -f "$TEMPLATE_DIR/doctor.js"
+          test -f "$TEMPLATE_DIR/sync-models.js"
+          test -f "$TEMPLATE_DIR/.dsh/cordis.patch.yml"
+          test -x "$TEMPLATE_DIR/setup-dsh.sh"
+          test -x "$TEMPLATE_DIR/sync-models.js"
+          grep -q "agent-default-model" "$TEMPLATE_DIR/.dsh/cordis.patch.yml"
+          rm -rf "$TEMPLATE_DIR"

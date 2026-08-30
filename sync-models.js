@@ -45,10 +45,11 @@ async function syncOpenRouterModels() {
         displayName: "OpenRouter"
         api: openai-completions
         baseURL: "https://openrouter.ai/api/v1"
+        reasoning: medium
         models:
 ${modelsYaml}`;
 
-  const anchorRe = /[ \t]*openrouter:[\s\S]*?(?=\n# Route default model|\n- id: agent-default-model)/;
+  const anchorRe = /^[ \t]*openrouter:[\s\S]*?(?=\n# Route default model|\n- id: agent-default-model)/m;
   if (!anchorRe.test(patchContent)) {
     throw new Error("Failed to locate the openrouter block anchor in cordis.patch.yml (missing '# Route default model' comment or agent-default-model entry).");
   }

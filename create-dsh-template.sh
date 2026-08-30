@@ -38,8 +38,53 @@ pnpm-lock.yaml
 *.log
 EOF
 
-# Empty placeholders make the template structure visible without storing secrets.
-: > "$TARGET/.dsh/cordis.patch.yml"
+# Write vanilla patch skeleton with model anchor (no credentials or tokens stored)
+cat > "$TARGET/.dsh/cordis.patch.yml" <<'EOF'
+# Disable default official DeepSeek provider in favor of OpenRouter Gateway
+- id: llm-deepseek
+  disabled: true
+
+# Disable default paid DeepSeek search in favor of free ModSearch
+- id: web-search-deepseek
+  disabled: true
+
+- id: web
+  config:
+    searchProvider: modsearch
+
+# Configure LLM Provider Gateway via llm-pi-ai (OpenRouter)
+- id: llm-pi-ai
+  config:
+    providers:
+      openrouter:
+        apiKeyEnv: OPENROUTER_API_KEY
+        displayName: "OpenRouter"
+        api: openai-completions
+        baseURL: "https://openrouter.ai/api/v1"
+        reasoning: medium
+        models: []
+
+# Route default model to OpenRouter DeepSeek V3
+- id: agent-default-model
+  config:
+    provider: openrouter
+    model: deepseek/deepseek-chat
+
+# Configure MCP Management Console Cockpit
+- id: mcp-panel
+  config:
+    auto_discover_local: true
+    enable_trial_console: true
+    backup_generations: true
+
+# Configure VS Code Integrated Browser Layout Panel Grid
+- id: better-sidebar
+  config:
+    layout: vscode-classic
+    persistent_terminal: true
+    enable_git_diff: true
+EOF
+
 : > "$TARGET/.dsh/settings.yaml"
 : > "$TARGET/.dsh/profiles/.gitkeep"
 

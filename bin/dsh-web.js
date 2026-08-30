@@ -5,6 +5,9 @@ import { resolveDshDir } from "./resolve-dsh.js";
 const dshHome = resolveDshDir();
 const userArgs = process.argv.slice(2);
 const port = process.env.DSH_PORT || process.env.PORT;
+if (!process.env.DSH_PORT && process.env.PORT) {
+  console.warn(`⚠️  Using generic PORT env var ('${process.env.PORT}') — prefer DSH_PORT for DSH-specific port configuration`);
+}
 
 const args = ["web", ...userArgs];
 

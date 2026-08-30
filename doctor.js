@@ -74,7 +74,7 @@ function checkPermissions() {
 }
 
 /** Mirror dsh-credentials-local's layering; never log the value itself. */
-function resolveKey() {
+async function resolveKey() {
   const envKey = process.env.OPENROUTER_API_KEY;
   if (envKey) return { key: envKey, source: "inherited environment" };
 
@@ -84,11 +84,11 @@ function resolveKey() {
     try {
       let key;
       try {
-        const { parseCredentialsDocument } = require("@deepseek-ai/dsh-credentials-local");
+        const { parseCredentialsDocument } = await import("@deepseek-ai/dsh-credentials-local");
         const parsed = parseCredentialsDocument(credDoc, credPath);
         key = parsed.refs.get("OPENROUTER_API_KEY");
       } catch (err) {
-        if (err.code !== "MODULE_NOT_FOUND" && !String(err.message).includes("Cannot find module")) throw err;
+        if (err.code !== "MODULE_NOT_FOUND" && !String(err.message).includes("Cannot find module") && !String(err.message).includes("Cannot find package")) throw err;
         const verMatch = credDoc.match(/^\s*version:\s*(\d+)/m);
         if (!verMatch || parseInt(verMatch[1], 10) !== 1) {
           throw new Error(`credentials-local: ${credPath} must declare version: 1`);
@@ -114,56 +114,55 @@ function resolveKey() {
 }
 
 async function checkCredentials() {
-  const found = resolveKey();
+  const found = await resolveKey();
   if (!found) {
     fail("OpenRouter credentials",
       `none found (environment → ${DISPLAY_TARGET}/.credentials.yaml → ${DISPLAY_TARGET}/.env) — run ./setup-dsh.sh`);
     return;
   }
+  if (!found.key.startsWith("sk-or-")) {
+    fail("OpenRouter key format", `expected prefix 'sk-or-', found '${found.key.slice(0, 8)}...' (source: ${found.source})`);
+    return;
+  }
   try {
     const res = await fetch("https://openrouter.ai/api/v1/auth/key", {
       headers: { Authorization: `Bearer ${found.key}` },
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(5000),
     });
     if (res.status === 200) {
-      let detail = `source: ${found.source}`;
-      try {
-        const body = await res.json();
-        const label = body?.data?.label ?? "";
-        const limit = body?.data?.limit == null ? "no spending limit" : `$${body.data.limit}`;
-        if (label || limit) detail += `; ${[label, limit].filter(Boolean).join(", ")}`;
-      } catch { /* JSON payload optional */ }
-      pass("OpenRouter key valid", detail);
+      const data = await res.json().catch(() => ({}));
+      const label = data.data?.label || maskKey(found.key);
+      const limit = data.data?.limit ? `limit $${data.data.limit}` : "no spending limit";
+      pass("OpenRouter key valid", `source: ${found.source}; ${label}, ${limit}`);
     } else if (res.status === 401) {
       fail("OpenRouter key rejected", `HTTP 401 Unauthorized (source: ${found.source})`);
     } else {
-      warn("OpenRouter key check", `HTTP ${res.status} from https://openrouter.ai/api/v1/auth/key`);
+      warn("OpenRouter key probe", `HTTP ${res.status} from openrouter.ai/api/v1/auth/key`);
     }
   } catch (err) {
-    warn("OpenRouter unreachable", `${err.message} (skipping live validation)`);
+    warn("OpenRouter reachability", `probe failed: ${err.message} — key validation skipped`);
   }
 }
 
 function checkPatch() {
   const patchPath = path.join(HOME_DSH, "cordis.patch.yml");
   const content = readIfExists(patchPath);
-  if (content === null) {
+  if (!content) {
     fail("Runtime patch layer", `${patchPath} not found — run ./setup-dsh.sh`);
     return;
   }
-  if (!content.includes("openrouter:")) {
-    fail("Runtime patch layer", "openrouter provider block missing — run ./setup-dsh.sh");
-    return;
+  const count = (content.match(/^[ \t]*- id:\s*["']?[^"'\r\n]+["']?/gm) || []).length;
+  if (count > 0) {
+    pass("Model catalog synced", `${count} models in ${DISPLAY_TARGET}/cordis.patch.yml`);
+  } else {
+    fail("Model catalog empty", `${DISPLAY_TARGET}/cordis.patch.yml has no model entries — run bun run sync-models`);
   }
-  const modelCount = (content.match(/^\s+- id:\s*["'][^"']+["']/gm) || []).length;
-  if (modelCount > 0) pass("Model catalog synced", `${modelCount} models in ${DISPLAY_TARGET}/cordis.patch.yml`);
-  else warn("Model catalog synced", "0 models — run: bun run sync-models");
 
-  if (/# Route default model|^- id: agent-default-model/m.test(content)) {
+  // Verify the sync anchor is present so `sync-models.js` can update models later
+  if (content.includes("# Route default model") || content.includes("- id: agent-default-model")) {
     pass("Sync anchor present");
   } else {
-    warn("Sync anchor present",
-      "'# Route default model' comment / agent-default-model entry missing — re-run ./setup-dsh.sh, then bun run sync-models");
+    fail("Sync anchor missing", `${DISPLAY_TARGET}/cordis.patch.yml is missing the '# Route default model' anchor comment required by sync-models`);
   }
 }
 
@@ -229,7 +228,13 @@ async function checkPort() {
   const port = process.env.DSH_PORT || process.env.PORT || "3080";
   try {
     const res = await fetch(`http://127.0.0.1:${port}`, { signal: AbortSignal.timeout(1500) });
-    info(`Port ${port}`, `a web server is responding (HTTP ${res.status})`);
+    const text = await res.text().catch(() => "");
+    const isDsh = text.includes("dsh") || text.includes("DeepSeek") || text.includes("Cordis") || (res.headers.get("x-powered-by") || "").toLowerCase().includes("dsh");
+    if (isDsh || res.status === 200) {
+      info(`Port ${port}`, `a web server is responding (HTTP ${res.status}${isDsh ? " — DSH verified" : ""})`);
+    } else {
+      info(`Port ${port}`, `occupied by non-DSH server (HTTP ${res.status}) — verify manually`);
+    }
   } catch (err) {
     const cause = String(err?.cause?.code ?? err?.code ?? err?.message ?? "");
     const lower = cause.toLowerCase();
