@@ -340,9 +340,10 @@ import path from "node:path";
 import { resolveDshDir } from "./bin/resolve-dsh.js";
 
 async function syncOpenRouterModels() {
-  console.log("🌐 Fetching live model catalog from OpenRouter API (https://openrouter.ai/api/v1/models)...");
+  const modelsApiUrl = process.env.OPENROUTER_MODELS_URL || "https://openrouter.ai/api/v1/models";
+  console.log(`🌐 Fetching live model catalog from OpenRouter API (${modelsApiUrl})...`);
   
-  const res = await fetch("https://openrouter.ai/api/v1/models", {
+  const res = await fetch(modelsApiUrl, {
     signal: AbortSignal.timeout(15000)
   });
   if (!res.ok) {

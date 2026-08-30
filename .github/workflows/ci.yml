@@ -121,3 +121,38 @@ jobs:
           test -x "$TEMPLATE_DIR/sync-models.js"
           grep -q "agent-default-model" "$TEMPLATE_DIR/.dsh/cordis.patch.yml"
           rm -rf "$TEMPLATE_DIR"
+
+      - name: reset.sh target-resolution and safety verification suite
+        run: |
+          # Test A: Custom directory reset (--dir)
+          CUSTOM_TARGET=/tmp/dsh-custom-test-reset
+          rm -rf "$CUSTOM_TARGET"
+          mkdir -p "$CUSTOM_TARGET"
+          touch "$CUSTOM_TARGET/cordis.patch.yml" "$CUSTOM_TARGET/settings.yaml"
+          bash reset.sh --dir "$CUSTOM_TARGET" --force
+          test ! -d "$CUSTOM_TARGET"
+
+          # Test B: Global protection on default reset in mock workspace
+          MOCK_WS=/tmp/dsh-mock-ws
+          GLOBAL_MOCK=/tmp/dsh-global-mock
+          rm -rf "$MOCK_WS" "$GLOBAL_MOCK"
+          mkdir -p "$MOCK_WS" "$GLOBAL_MOCK/.dsh"
+          cp reset.sh "$MOCK_WS/reset.sh"
+          touch "$GLOBAL_MOCK/.dsh/cordis.patch.yml"
+          echo "global" > "$MOCK_WS/.dsh-target"
+          (cd "$MOCK_WS" && HOME="$GLOBAL_MOCK" bash reset.sh --force)
+          test ! -f "$MOCK_WS/.dsh-target"
+          test -f "$GLOBAL_MOCK/.dsh/cordis.patch.yml"
+          rm -rf "$MOCK_WS" "$GLOBAL_MOCK"
+
+          # Test C: Sentinel verification aborts on non-DSH directory
+          UNRELATED_DIR=/tmp/unrelated-reset-guard
+          rm -rf "$UNRELATED_DIR"
+          mkdir -p "$UNRELATED_DIR"
+          touch "$UNRELATED_DIR/user-file.txt"
+          if bash reset.sh --dir "$UNRELATED_DIR" --force; then
+            echo "::error::reset.sh should abort on non-DSH directory without sentinels"
+            exit 1
+          fi
+          test -f "$UNRELATED_DIR/user-file.txt"
+          rm -rf "$UNRELATED_DIR"
