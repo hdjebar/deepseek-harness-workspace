@@ -378,6 +378,7 @@ Deep-dive guides live in [`docs/`](docs/):
 | [🧹 Stopping & Resetting](docs/reset.md) | Killing lingering processes, `reset.sh` clean-slate workflow |
 | [❓ Troubleshooting](docs/troubleshooting.md) | Common errors and fixes |
 | [🧪 CI & Quality Gates](docs/ci.md) | What GitHub Actions validates on every push |
+| [🎯 Goal Coverage](docs/goal-coverage.md) | Qualitative coverage estimate against the README goal |
 | [🪟 Windows Support](docs/windows.md) | Why macOS/Linux only today, the WSL2 quick path, and a detailed native-porting guide |
 | [🔄 Upgrading](docs/upgrading.md) | Framework/plugin/model-catalog upgrade mechanics, and the gotcha where `setup-dsh.sh` re-runs silently overwrite your customizations |
 | [🤝 Contributing](CONTRIBUTING.md) | The verify-against-the-real-package discipline, CI gates, `reset.sh`/`setup-dsh.sh` caution, doc conventions, and how change requests work |
