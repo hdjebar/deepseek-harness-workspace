@@ -46,7 +46,6 @@ async function syncOpenRouterModels() {
         displayName: "OpenRouter"
         api: openai-completions
         baseURL: "https://openrouter.ai/api/v1"
-        reasoning: medium
         models:
 ${modelsYaml}`;
 

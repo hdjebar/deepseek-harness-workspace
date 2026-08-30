@@ -61,7 +61,6 @@ cat > "$TARGET/.dsh/cordis.patch.yml" <<'EOF'
         displayName: "OpenRouter"
         api: openai-completions
         baseURL: "https://openrouter.ai/api/v1"
-        reasoning: medium
         models: []
 
 # Route default model to OpenRouter DeepSeek V3

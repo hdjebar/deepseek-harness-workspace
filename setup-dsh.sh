@@ -227,7 +227,6 @@ cat << 'EOF' > "${DSH_DIR}/cordis.patch.yml"
         displayName: "OpenRouter"
         api: openai-completions
         baseURL: "https://openrouter.ai/api/v1"
-        reasoning: medium
 
 # Route default model to OpenRouter DeepSeek V3
 - id: agent-default-model
@@ -382,7 +381,6 @@ async function syncOpenRouterModels() {
         displayName: "OpenRouter"
         api: openai-completions
         baseURL: "https://openrouter.ai/api/v1"
-        reasoning: medium
         models:
 ${modelsYaml}`;
 
