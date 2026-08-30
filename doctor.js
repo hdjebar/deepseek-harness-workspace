@@ -235,8 +235,10 @@ async function checkPort() {
     const res = await fetch(`http://127.0.0.1:${port}`, { signal: AbortSignal.timeout(1500) });
     const text = await res.text().catch(() => "");
     const isDsh = text.includes("dsh") || text.includes("DeepSeek") || text.includes("Cordis") || (res.headers.get("x-powered-by") || "").toLowerCase().includes("dsh");
-    if (isDsh || res.status === 200) {
-      info(`Port ${port}`, `a web server is responding (HTTP ${res.status}${isDsh ? " — DSH verified" : ""})`);
+    if (isDsh) {
+      info(`Port ${port}`, `a web server is responding (HTTP ${res.status} — DSH verified)`);
+    } else if (res.status === 200) {
+      info(`Port ${port}`, `a web server is responding (HTTP ${res.status})`);
     } else {
       info(`Port ${port}`, `occupied by non-DSH server (HTTP ${res.status}) — verify manually`);
     }
