@@ -1,3 +1,7 @@
+> [!IMPORTANT]
+> **This repository has been superseded and consolidated into [DSH-DDS](https://github.com/hdjebar/DSH-DDS).**  
+> Please use **[DSH-DDS](https://github.com/hdjebar/DSH-DDS)** for the production Docker stack with Arize Phoenix telemetry, Gemini Thought Signature bridge, pre-packaged MCP servers, and auto-syncing models.
+
 <div align="center">
 
 # ⚡ DeepSeek Harness (DSH)
